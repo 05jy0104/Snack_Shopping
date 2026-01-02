@@ -25,14 +25,14 @@ public class CartController {
     @PostMapping("/add")
     public Map<String, Object> add(@RequestBody Map<String, Object> params, HttpSession session) {
         Map<String, Object> result = new HashMap<>();
-        Object userObj = session.getAttribute("user");
-        if (userObj == null) {
-            result.put("success", false);
-            result.put("message", "未登录");
-            return result;
-        }
-
-        Integer userId = (Integer) session.getAttribute("userId");
+        
+        System.out.println("=== Cart Add Debug ===");
+        System.out.println("Params: " + params);
+        System.out.println("Session userId: " + session.getAttribute("userId"));
+        
+        Integer userId = params.get("userId") != null ? (Integer) params.get("userId") : (Integer) session.getAttribute("userId");
+        System.out.println("Final userId: " + userId);
+        
         if (userId == null) {
             result.put("success", false);
             result.put("message", "用户ID不存在");
@@ -70,9 +70,11 @@ public class CartController {
     }
 
     @GetMapping("/list")
-    public Map<String, Object> list(HttpSession session) {
+    public Map<String, Object> list(@RequestParam(required = false) Integer userId, HttpSession session) {
         Map<String, Object> result = new HashMap<>();
-        Integer userId = (Integer) session.getAttribute("userId");
+        if (userId == null) {
+            userId = (Integer) session.getAttribute("userId");
+        }
         if (userId == null) {
             result.put("success", false);
             result.put("message", "未登录");
@@ -95,9 +97,11 @@ public class CartController {
     }
 
     @GetMapping("/clear")
-    public Map<String, Object> clear(HttpSession session) {
+    public Map<String, Object> clear(@RequestParam(required = false) Integer userId, HttpSession session) {
         Map<String, Object> result = new HashMap<>();
-        Integer userId = (Integer) session.getAttribute("userId");
+        if (userId == null) {
+            userId = (Integer) session.getAttribute("userId");
+        }
         cartService.clear(userId);
         result.put("success", true);
         result.put("message", "清空成功");

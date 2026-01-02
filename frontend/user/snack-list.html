@@ -4,6 +4,85 @@
     <meta charset="UTF-8">
     <title>商品列表 - 零食商店</title>
     <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .success-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .success-modal.show {
+            display: flex;
+        }
+
+        .success-content {
+            background-color: rgba(128, 128, 128, 0.85);
+            padding: 12px 50px;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.4s ease-out;
+            min-width: 250px;
+            max-width: 300px;
+        }
+
+        .success-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+            animation: bounce 0.6s ease-in-out;
+        }
+
+        .success-message {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px 0;
+            letter-spacing: 1px;
+        }
+
+        .success-subtitle {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="header">
@@ -16,6 +95,13 @@
             <a href="order-list.html">我的订单</a>
             <a href="profile.html">个人中心</a>
             <a href="#" id="logout">退出</a>
+        </div>
+    </div>
+    
+    <div id="successModal" class="success-modal">
+        <div class="success-content">
+            <div class="success-icon">✓</div>
+            <div class="success-message">加入购物车，成功</div>
         </div>
     </div>
     
@@ -35,7 +121,7 @@
         </div>
     </div>
 
-    <script src="../js/api.js"></script>
+    <script src="../js/api.js?v=2"></script>
     <script>
         let currentCategoryId = null;
         let currentKeyword = '';
@@ -125,9 +211,16 @@
 
         async function addToCart(snackId) {
             try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                console.log('=== Add to Cart Debug ===');
+                console.log('User from localStorage:', user);
+                console.log('User ID:', user ? user.id : 'null');
+                
                 const response = await api.user.cart.add({ snackId, quantity: 1 });
+                console.log('Response:', response);
+                
                 if (response.success) {
-                    alert('已添加到购物车');
+                    showSuccessModal();
                 } else {
                     alert(response.message || '添加失败');
                 }
@@ -135,6 +228,15 @@
                 console.error('添加到购物车失败:', error);
                 alert('添加失败，请稍后重试');
             }
+        }
+
+        function showSuccessModal() {
+            const modal = document.getElementById('successModal');
+            modal.classList.add('show');
+            
+            setTimeout(() => {
+                modal.classList.remove('show');
+            }, 2000);
         }
 
         loadCategories();

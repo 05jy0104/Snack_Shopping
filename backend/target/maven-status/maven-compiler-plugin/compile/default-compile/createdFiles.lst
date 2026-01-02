@@ -1,4 +1,5 @@
 com\snack\controller\AdminOrderController.class
+com\snack\entity\UserCollection.class
 com\snack\service\NewsService.class
 com\snack\entity\Admin.class
 com\snack\entity\Order.class

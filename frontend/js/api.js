@@ -55,19 +55,39 @@ const api = {
             })
         },
         cart: {
-            add: (data) => request('/user/cart/add', {
-                method: 'POST',
-                body: JSON.stringify(data)
-            }),
-            list: () => request('/user/cart/list', {
-                method: 'GET'
-            }),
+            add: (data) => {
+                const user = JSON.parse(localStorage.getItem('user'));
+                console.log('=== API Cart Add Debug ===');
+                console.log('Original data:', data);
+                console.log('User:', user);
+                if (user && user.id) {
+                    data.userId = user.id;
+                }
+                console.log('Modified data:', data);
+                return request('/user/cart/add', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+            },
+            list: () => {
+                const user = JSON.parse(localStorage.getItem('user'));
+                const params = user && user.id ? { userId: user.id } : {};
+                const queryString = new URLSearchParams(params).toString();
+                return request(`/user/cart/list${queryString ? '?' + queryString : ''}`, {
+                    method: 'GET'
+                });
+            },
             delete: (id) => request(`/user/cart/delete/${id}`, {
                 method: 'GET'
             }),
-            clear: () => request('/user/cart/clear', {
-                method: 'GET'
-            })
+            clear: () => {
+                const user = JSON.parse(localStorage.getItem('user'));
+                const params = user && user.id ? { userId: user.id } : {};
+                const queryString = new URLSearchParams(params).toString();
+                return request(`/user/cart/clear${queryString ? '?' + queryString : ''}`, {
+                    method: 'GET'
+                });
+            }
         },
         order: {
             list: () => request('/user/order/list', {
