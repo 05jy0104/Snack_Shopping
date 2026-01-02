@@ -37,15 +37,43 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public Map<String, Object> register(@RequestBody User user) {
+    public Map<String, Object> register(@RequestBody Map<String, String> params) {
         Map<String, Object> result = new HashMap<>();
+        
+        String username = params.get("username");
+        String password = params.get("password");
+        String phone = params.get("phone");
+        
+        if (username == null || username.trim().isEmpty()) {
+            result.put("success", false);
+            result.put("message", "昵称不能为空");
+            return result;
+        }
+        
+        if (password == null || password.trim().isEmpty()) {
+            result.put("success", false);
+            result.put("message", "密码不能为空");
+            return result;
+        }
+        
+        if (phone == null || phone.trim().isEmpty()) {
+            result.put("success", false);
+            result.put("message", "手机号不能为空");
+            return result;
+        }
+        
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(password);
+        user.setPhone(phone);
+        
         User existUser = userService.register(user);
         if (existUser != null) {
             result.put("success", true);
             result.put("message", "注册成功");
         } else {
             result.put("success", false);
-            result.put("message", "用户名已存在");
+            result.put("message", "昵称已存在");
         }
         return result;
     }

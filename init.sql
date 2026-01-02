@@ -4,10 +4,10 @@ USE snack_shopping;
 
 CREATE TABLE IF NOT EXISTS user (
     id INT PRIMARY KEY AUTO_INCREMENT COMMENT '用户ID',
-    username VARCHAR(50) NOT NULL UNIQUE COMMENT '用户名',
+    username VARCHAR(50) NOT NULL UNIQUE COMMENT '昵称',
     password VARCHAR(100) NOT NULL COMMENT '密码',
+    phone VARCHAR(20) NOT NULL COMMENT '手机号',
     real_name VARCHAR(50) COMMENT '真实姓名',
-    phone VARCHAR(20) COMMENT '手机号',
     email VARCHAR(100) COMMENT '邮箱',
     address VARCHAR(200) COMMENT '地址',
     balance DECIMAL(10,2) DEFAULT 0.00 COMMENT '余额',

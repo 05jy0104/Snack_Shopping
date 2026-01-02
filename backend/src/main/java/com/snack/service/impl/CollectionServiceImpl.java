@@ -1,6 +1,6 @@
 package com.snack.service.impl;
 
-import com.snack.entity.Collection;
+import com.snack.entity.UserCollection;
 import com.snack.mapper.CollectionMapper;
 import com.snack.service.CollectionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,13 +15,13 @@ public class CollectionServiceImpl implements CollectionService {
     private CollectionMapper collectionMapper;
 
     @Override
-    public List<Collection> findByUserId(Integer userId) {
+    public List<UserCollection> findByUserId(Integer userId) {
         return collectionMapper.findByUserId(userId);
     }
 
     @Override
-    public void add(Collection collection) {
-        Collection existCollection = collectionMapper.findByUserIdAndSnackId(collection.getUserId(), collection.getSnackId());
+    public void add(UserCollection collection) {
+        UserCollection existCollection = collectionMapper.findByUserIdAndSnackId(collection.getUserId(), collection.getSnackId());
         if (existCollection == null) {
             collection.setCreateTime(new Date());
             collectionMapper.insert(collection);

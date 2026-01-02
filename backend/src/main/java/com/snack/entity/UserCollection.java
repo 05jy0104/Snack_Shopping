@@ -2,14 +2,12 @@ package com.snack.entity;
 
 import java.util.Date;
 
-public class Cart {
+public class UserCollection {
     private Integer id;
     private Integer userId;
     private Integer snackId;
     private String snackName;
-    private Double price;
     private String image;
-    private Integer quantity;
     private Date createTime;
 
     public Integer getId() {
@@ -44,28 +42,12 @@ public class Cart {
         this.snackName = snackName;
     }
 
-    public Double getPrice() {
-        return price;
-    }
-
-    public void setPrice(Double price) {
-        this.price = price;
-    }
-
     public String getImage() {
         return image;
     }
 
     public void setImage(String image) {
         this.image = image;
-    }
-
-    public Integer getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
     }
 
     public Date getCreateTime() {

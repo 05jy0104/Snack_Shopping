@@ -12,28 +12,20 @@
         <div id="success" class="alert alert-success" style="display: none;"></div>
         <form id="registerForm">
             <div class="form-group">
-                <label>用户名</label>
+                <label>昵称</label>
                 <input type="text" id="username" required>
-            </div>
-            <div class="form-group">
-                <label>密码</label>
-                <input type="password" id="password" required>
-            </div>
-            <div class="form-group">
-                <label>真实姓名</label>
-                <input type="text" id="realName" required>
             </div>
             <div class="form-group">
                 <label>手机号</label>
                 <input type="text" id="phone" required>
             </div>
             <div class="form-group">
-                <label>邮箱</label>
-                <input type="email" id="email">
+                <label>密码</label>
+                <input type="password" id="password" required>
             </div>
             <div class="form-group">
-                <label>地址</label>
-                <input type="text" id="address">
+                <label>确认密码</label>
+                <input type="password" id="confirmPassword" required>
             </div>
             <button type="submit" class="btn btn-primary">注册</button>
         </form>
@@ -47,13 +39,18 @@
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                showError('两次输入的密码不一致');
+                return;
+            }
+            
             const userData = {
                 username: document.getElementById('username').value,
-                password: document.getElementById('password').value,
-                realName: document.getElementById('realName').value,
-                phone: document.getElementById('phone').value,
-                email: document.getElementById('email').value,
-                address: document.getElementById('address').value
+                password: password,
+                phone: document.getElementById('phone').value
             };
             
             try {

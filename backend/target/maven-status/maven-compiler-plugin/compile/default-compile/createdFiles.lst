@@ -3,11 +3,14 @@ com\snack\service\NewsService.class
 com\snack\entity\Admin.class
 com\snack\entity\Order.class
 com\snack\mapper\BannerMapper.class
+com\snack\mapper\CollectionMapper.class
+com\snack\service\impl\CollectionServiceImpl.class
 com\snack\entity\Banner.class
 com\snack\service\SnackService.class
 com\snack\mapper\FavoriteMapper.class
 com\snack\controller\OrderController.class
 com\snack\entity\Snack.class
+com\snack\service\CollectionService.class
 com\snack\mapper\AdminMapper.class
 com\snack\entity\Favorite.class
 com\snack\service\impl\RechargeServiceImpl.class
