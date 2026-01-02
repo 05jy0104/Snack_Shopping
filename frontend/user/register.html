@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>用户注册 - 零食商店</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="login-container">
+        <h1>用户注册</h1>
+        <div id="error" class="alert alert-error" style="display: none;"></div>
+        <div id="success" class="alert alert-success" style="display: none;"></div>
+        <form id="registerForm">
+            <div class="form-group">
+                <label>用户名</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="password" required>
+            </div>
+            <div class="form-group">
+                <label>真实姓名</label>
+                <input type="text" id="realName" required>
+            </div>
+            <div class="form-group">
+                <label>手机号</label>
+                <input type="text" id="phone" required>
+            </div>
+            <div class="form-group">
+                <label>邮箱</label>
+                <input type="email" id="email">
+            </div>
+            <div class="form-group">
+                <label>地址</label>
+                <input type="text" id="address">
+            </div>
+            <button type="submit" class="btn btn-primary">注册</button>
+        </form>
+        <div class="register-link">
+            已有账号？<a href="login.html">立即登录</a>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const userData = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                realName: document.getElementById('realName').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                address: document.getElementById('address').value
+            };
+            
+            try {
+                const response = await api.user.register(userData);
+                
+                if (response.success) {
+                    showSuccess('注册成功，即将跳转到登录页面...');
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+                } else {
+                    showError(response.message);
+                }
+            } catch (error) {
+                showError('注册失败，请稍后重试');
+                console.error('Register error:', error);
+            }
+        });
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

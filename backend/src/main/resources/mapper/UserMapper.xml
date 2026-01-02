@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snack.mapper.UserMapper">
+    <resultMap id="BaseResultMap" type="com.snack.entity.User">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="password" property="password"/>
+        <result column="real_name" property="realName"/>
+        <result column="phone" property="phone"/>
+        <result column="email" property="email"/>
+        <result column="address" property="address"/>
+        <result column="balance" property="balance"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="findByUsername" resultMap="BaseResultMap">
+        SELECT * FROM user WHERE username = #{username}
+    </select>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT * FROM user WHERE id = #{id}
+    </select>
+
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT * FROM user ORDER BY create_time DESC
+    </select>
+
+    <insert id="insert" parameterType="com.snack.entity.User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user (username, password, real_name, phone, email, address, balance, create_time)
+        VALUES (#{username}, #{password}, #{realName}, #{phone}, #{email}, #{address}, #{balance}, #{createTime})
+    </insert>
+
+    <update id="update" parameterType="com.snack.entity.User">
+        UPDATE user
+        <set>
+            <if test="password != null">password = #{password},</if>
+            <if test="realName != null">real_name = #{realName},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="balance != null">balance = #{balance},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM user WHERE id = #{id}
+    </delete>
+</mapper>

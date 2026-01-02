@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>购物车 - 零食商店</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>零食商店</h1>
+        <div class="nav">
+            <span id="welcome"></span>
+            <a href="index.html">首页</a>
+            <a href="snack-list.html">商品列表</a>
+            <a href="cart-list.html">购物车</a>
+            <a href="order-list.html">我的订单</a>
+            <a href="profile.html">个人中心</a>
+            <a href="#" id="logout">退出</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="content">
+            <h2>购物车</h2>
+            
+            <div id="cartContent">
+                <table id="cartTable">
+                    <thead>
+                        <tr>
+                            <th>商品名称</th>
+                            <th>价格</th>
+                            <th>数量</th>
+                            <th>小计</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cartList"></tbody>
+                </table>
+                
+                <div style="margin-top: 20px; text-align: right;">
+                    <h3>总计: <span id="totalPrice">¥0.00</span></h3>
+                </div>
+                
+                <div style="margin-top: 20px; text-align: right;">
+                    <button onclick="clearCart()" class="btn btn-danger">清空购物车</button>
+                    <button onclick="showOrderForm()" class="btn btn-primary">结算</button>
+                </div>
+            </div>
+            
+            <div id="emptyCart" style="display: none; text-align: center; padding: 50px;">
+                <p>购物车为空</p>
+                <a href="snack-list.html" class="btn btn-primary">去购物</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="orderModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+        <div style="position: relative; top: 50%; transform: translateY(-50%); max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px;">
+            <h3>填写订单信息</h3>
+            <div class="form-group" style="margin-top: 20px;">
+                <label>收货地址</label>
+                <input type="text" id="orderAddress" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div class="form-group">
+                <label>联系电话</label>
+                <input type="text" id="orderPhone" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div style="margin-top: 20px; text-align: right;">
+                <button onclick="hideOrderForm()" class="btn btn-danger">取消</button>
+                <button onclick="createOrder()" class="btn btn-primary">确认下单</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            window.location.href = 'login.html';
+        } else {
+            document.getElementById('welcome').textContent = '欢迎, ' + user.realName;
+        }
+
+        document.getElementById('logout').addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        });
+
+        let cartItems = [];
+
+        async function loadCart() {
+            try {
+                const response = await api.user.cart.list();
+                cartItems = response.cartList || [];
+                
+                if (cartItems.length === 0) {
+                    document.getElementById('cartContent').style.display = 'none';
+                    document.getElementById('emptyCart').style.display = 'block';
+                    return;
+                }
+                
+                const tbody = document.getElementById('cartList');
+                let total = 0;
+                
+                tbody.innerHTML = cartItems.map(item => {
+                    const subtotal = item.price * item.quantity;
+                    total += subtotal;
+                    return `
+                        <tr>
+                            <td>${item.snackName}</td>
+                            <td>¥${item.price.toFixed(2)}</td>
+                            <td>${item.quantity}</td>
+                            <td>¥${subtotal.toFixed(2)}</td>
+                            <td>
+                                <button onclick="deleteCartItem(${item.id})" class="btn btn-danger">删除</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+                
+                document.getElementById('totalPrice').textContent = '¥' + total.toFixed(2);
+            } catch (error) {
+                console.error('加载购物车失败:', error);
+                alert('加载失败，请稍后重试');
+            }
+        }
+
+        async function deleteCartItem(id) {
+            if (!confirm('确定要删除这个商品吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await api.user.cart.delete(id);
+                if (response.success) {
+                    loadCart();
+                } else {
+                    alert(response.message || '删除失败');
+                }
+            } catch (error) {
+                console.error('删除失败:', error);
+                alert('删除失败，请稍后重试');
+            }
+        }
+
+        async function clearCart() {
+            if (!confirm('确定要清空购物车吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await api.user.cart.clear();
+                if (response.success) {
+                    loadCart();
+                } else {
+                    alert(response.message || '清空失败');
+                }
+            } catch (error) {
+                console.error('清空失败:', error);
+                alert('清空失败，请稍后重试');
+            }
+        }
+
+        function showOrderForm() {
+            document.getElementById('orderModal').style.display = 'block';
+            document.getElementById('orderAddress').value = user.address || '';
+            document.getElementById('orderPhone').value = user.phone || '';
+        }
+
+        function hideOrderForm() {
+            document.getElementById('orderModal').style.display = 'none';
+        }
+
+        async function createOrder() {
+            const address = document.getElementById('orderAddress').value;
+            const phone = document.getElementById('orderPhone').value;
+            
+            if (!address || !phone) {
+                alert('请填写完整的订单信息');
+                return;
+            }
+            
+            try {
+                const response = await api.user.order.create({ address, phone });
+                if (response.success) {
+                    alert('订单创建成功！');
+                    hideOrderForm();
+                    window.location.href = 'order-list.html';
+                } else {
+                    alert(response.message || '订单创建失败');
+                }
+            } catch (error) {
+                console.error('订单创建失败:', error);
+                alert('订单创建失败，请稍后重试');
+            }
+        }
+
+        loadCart();
+    </script>
+</body>
+</html>

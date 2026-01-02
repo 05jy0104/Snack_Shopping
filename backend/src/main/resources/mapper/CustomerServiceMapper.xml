@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snack.mapper.CustomerServiceMapper">
+    <resultMap id="BaseResultMap" type="com.snack.entity.CustomerService">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="username" property="username"/>
+        <result column="content" property="content"/>
+        <result column="reply" property="reply"/>
+        <result column="create_time" property="createTime"/>
+        <result column="reply_time" property="replyTime"/>
+    </resultMap>
+
+    <select id="findByUserId" resultMap="BaseResultMap">
+        SELECT * FROM customer_service WHERE user_id = #{userId} ORDER BY create_time DESC
+    </select>
+
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT * FROM customer_service ORDER BY create_time DESC
+    </select>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT * FROM customer_service WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.snack.entity.CustomerService" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO customer_service (user_id, username, content, create_time)
+        VALUES (#{userId}, #{username}, #{content}, #{createTime})
+    </insert>
+
+    <update id="update" parameterType="com.snack.entity.CustomerService">
+        UPDATE customer_service
+        <set>
+            <if test="reply != null">reply = #{reply},</if>
+            <if test="replyTime != null">reply_time = #{replyTime},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM customer_service WHERE id = #{id}
+    </delete>
+</mapper>

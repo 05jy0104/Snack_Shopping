@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>商品管理 - 零食商店管理后台</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="header admin-header">
+        <h1>零食商店管理后台</h1>
+        <div class="nav">
+            <a href="index.html">首页</a>
+            <a href="user-list.html">用户管理</a>
+            <a href="category-list.html">分类管理</a>
+            <a href="snack-list.html">商品管理</a>
+            <a href="order-list.html">订单管理</a>
+            <a href="#" id="logout">退出</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="content">
+            <h2>商品管理</h2>
+            
+            <div style="margin-bottom: 20px;">
+                <button onclick="showAddModal()" class="btn btn-primary">添加商品</button>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>商品名称</th>
+                        <th>分类</th>
+                        <th>价格</th>
+                        <th>库存</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="snackList"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="snackModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+        <div style="position: relative; top: 50%; transform: translateY(-50%); max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; max-height: 90vh; overflow-y: auto;">
+            <h3 id="modalTitle">添加商品</h3>
+            <div class="form-group" style="margin-top: 20px;">
+                <label>商品名称</label>
+                <input type="text" id="snackName" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div class="form-group">
+                <label>分类</label>
+                <select id="snackCategoryId" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">请选择分类</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>价格</label>
+                <input type="number" id="snackPrice" step="0.01" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div class="form-group">
+                <label>库存</label>
+                <input type="number" id="snackStock" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div class="form-group">
+                <label>描述</label>
+                <textarea id="snackDescription" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+            </div>
+            <div class="form-group">
+                <label>图片URL</label>
+                <input type="text" id="snackImage" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div style="margin-top: 20px; text-align: right;">
+                <button onclick="hideModal()" class="btn btn-danger">取消</button>
+                <button onclick="saveSnack()" class="btn btn-primary">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        const admin = JSON.parse(localStorage.getItem('admin'));
+        if (!admin) {
+            window.location.href = 'login.html';
+        }
+
+        document.getElementById('logout').addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('admin');
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        });
+
+        let currentSnackId = null;
+        let categories = [];
+
+        async function loadCategories() {
+            try {
+                const response = await api.admin.category.list();
+                categories = response.categories || [];
+                const select = document.getElementById('snackCategoryId');
+                
+                select.innerHTML = '<option value="">请选择分类</option>';
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.id;
+                    option.textContent = category.name;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('加载分类失败:', error);
+            }
+        }
+
+        async function loadSnacks() {
+            try {
+                const response = await api.admin.snack.list();
+                const snacks = response.snacks || [];
+                const tbody = document.getElementById('snackList');
+                
+                if (snacks.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">暂无商品</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = snacks.map(snack => {
+                    const category = categories.find(c => c.id === snack.categoryId);
+                    return `
+                        <tr>
+                            <td>${snack.id}</td>
+                            <td>${snack.name}</td>
+                            <td>${category ? category.name : '-'}</td>
+                            <td>¥${snack.price.toFixed(2)}</td>
+                            <td>${snack.stock}</td>
+                            <td>
+                                <button onclick="editSnack(${snack.id})" class="btn btn-primary">编辑</button>
+                                <button onclick="deleteSnack(${snack.id})" class="btn btn-danger">删除</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('加载商品失败:', error);
+                document.getElementById('snackList').innerHTML = '<tr><td colspan="6" style="text-align: center;">加载失败，请稍后重试</td></tr>';
+            }
+        }
+
+        function showAddModal() {
+            currentSnackId = null;
+            document.getElementById('modalTitle').textContent = '添加商品';
+            document.getElementById('snackName').value = '';
+            document.getElementById('snackCategoryId').value = '';
+            document.getElementById('snackPrice').value = '';
+            document.getElementById('snackStock').value = '';
+            document.getElementById('snackDescription').value = '';
+            document.getElementById('snackImage').value = '';
+            document.getElementById('snackModal').style.display = 'block';
+        }
+
+        async function editSnack(id) {
+            try {
+                const response = await api.admin.snack.edit(id);
+                const snack = response.snack;
+                
+                currentSnackId = id;
+                document.getElementById('modalTitle').textContent = '编辑商品';
+                document.getElementById('snackName').value = snack.name || '';
+                document.getElementById('snackCategoryId').value = snack.categoryId || '';
+                document.getElementById('snackPrice').value = snack.price || '';
+                document.getElementById('snackStock').value = snack.stock || '';
+                document.getElementById('snackDescription').value = snack.description || '';
+                document.getElementById('snackImage').value = snack.image || '';
+                document.getElementById('snackModal').style.display = 'block';
+            } catch (error) {
+                console.error('加载商品信息失败:', error);
+                alert('加载失败，请稍后重试');
+            }
+        }
+
+        function hideModal() {
+            document.getElementById('snackModal').style.display = 'none';
+        }
+
+        async function saveSnack() {
+            const snackData = {
+                name: document.getElementById('snackName').value,
+                categoryId: parseInt(document.getElementById('snackCategoryId').value),
+                price: parseFloat(document.getElementById('snackPrice').value),
+                stock: parseInt(document.getElementById('snackStock').value),
+                description: document.getElementById('snackDescription').value,
+                image: document.getElementById('snackImage').value
+            };
+            
+            if (!snackData.name || !snackData.categoryId || !snackData.price || !snackData.stock) {
+                alert('请填写完整的商品信息');
+                return;
+            }
+            
+            try {
+                let response;
+                if (currentSnackId) {
+                    snackData.id = currentSnackId;
+                    response = await api.admin.snack.update(snackData);
+                } else {
+                    response = await api.admin.snack.add(snackData);
+                }
+                
+                if (response.success) {
+                    alert('保存成功');
+                    hideModal();
+                    loadSnacks();
+                } else {
+                    alert(response.message || '保存失败');
+                }
+            } catch (error) {
+                console.error('保存失败:', error);
+                alert('保存失败，请稍后重试');
+            }
+        }
+
+        async function deleteSnack(id) {
+            if (!confirm('确定要删除这个商品吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await api.admin.snack.delete(id);
+                if (response.success) {
+                    alert('删除成功');
+                    loadSnacks();
+                } else {
+                    alert(response.message || '删除失败');
+                }
+            } catch (error) {
+                console.error('删除失败:', error);
+                alert('删除失败，请稍后重试');
+            }
+        }
+
+        loadCategories();
+        loadSnacks();
+    </script>
+</body>
+</html>

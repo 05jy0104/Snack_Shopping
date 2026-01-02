@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>分类管理 - 零食商店管理后台</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="header admin-header">
+        <h1>零食商店管理后台</h1>
+        <div class="nav">
+            <a href="index.html">首页</a>
+            <a href="user-list.html">用户管理</a>
+            <a href="category-list.html">分类管理</a>
+            <a href="snack-list.html">商品管理</a>
+            <a href="order-list.html">订单管理</a>
+            <a href="#" id="logout">退出</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="content">
+            <h2>分类管理</h2>
+            
+            <div style="margin-bottom: 20px;">
+                <button onclick="showAddModal()" class="btn btn-primary">添加分类</button>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>分类名称</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="categoryList"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="categoryModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+        <div style="position: relative; top: 50%; transform: translateY(-50%); max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px;">
+            <h3 id="modalTitle">添加分类</h3>
+            <div class="form-group" style="margin-top: 20px;">
+                <label>分类名称</label>
+                <input type="text" id="categoryName" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div style="margin-top: 20px; text-align: right;">
+                <button onclick="hideModal()" class="btn btn-danger">取消</button>
+                <button onclick="saveCategory()" class="btn btn-primary">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        const admin = JSON.parse(localStorage.getItem('admin'));
+        if (!admin) {
+            window.location.href = 'login.html';
+        }
+
+        document.getElementById('logout').addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('admin');
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        });
+
+        let currentCategoryId = null;
+
+        async function loadCategories() {
+            try {
+                const response = await api.admin.category.list();
+                const categories = response.categories || [];
+                const tbody = document.getElementById('categoryList');
+                
+                if (categories.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">暂无分类</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = categories.map(category => `
+                    <tr>
+                        <td>${category.id}</td>
+                        <td>${category.name}</td>
+                        <td>
+                            <button onclick="editCategory(${category.id})" class="btn btn-primary">编辑</button>
+                            <button onclick="deleteCategory(${category.id})" class="btn btn-danger">删除</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('加载分类失败:', error);
+                document.getElementById('categoryList').innerHTML = '<tr><td colspan="3" style="text-align: center;">加载失败，请稍后重试</td></tr>';
+            }
+        }
+
+        function showAddModal() {
+            currentCategoryId = null;
+            document.getElementById('modalTitle').textContent = '添加分类';
+            document.getElementById('categoryName').value = '';
+            document.getElementById('categoryModal').style.display = 'block';
+        }
+
+        async function editCategory(id) {
+            try {
+                const response = await api.admin.category.edit(id);
+                const category = response.category;
+                
+                currentCategoryId = id;
+                document.getElementById('modalTitle').textContent = '编辑分类';
+                document.getElementById('categoryName').value = category.name;
+                document.getElementById('categoryModal').style.display = 'block';
+            } catch (error) {
+                console.error('加载分类信息失败:', error);
+                alert('加载失败，请稍后重试');
+            }
+        }
+
+        function hideModal() {
+            document.getElementById('categoryModal').style.display = 'none';
+        }
+
+        async function saveCategory() {
+            const name = document.getElementById('categoryName').value;
+            
+            if (!name) {
+                alert('请输入分类名称');
+                return;
+            }
+            
+            try {
+                let response;
+                if (currentCategoryId) {
+                    response = await api.admin.category.update({ id: currentCategoryId, name });
+                } else {
+                    response = await api.admin.category.add({ name });
+                }
+                
+                if (response.success) {
+                    alert('保存成功');
+                    hideModal();
+                    loadCategories();
+                } else {
+                    alert(response.message || '保存失败');
+                }
+            } catch (error) {
+                console.error('保存失败:', error);
+                alert('保存失败，请稍后重试');
+            }
+        }
+
+        async function deleteCategory(id) {
+            if (!confirm('确定要删除这个分类吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await api.admin.category.delete(id);
+                if (response.success) {
+                    alert('删除成功');
+                    loadCategories();
+                } else {
+                    alert(response.message || '删除失败');
+                }
+            } catch (error) {
+                console.error('删除失败:', error);
+                alert('删除失败，请稍后重试');
+            }
+        }
+
+        loadCategories();
+    </script>
+</body>
+</html>

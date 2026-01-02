@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>订单管理 - 零食商店管理后台</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="header admin-header">
+        <h1>零食商店管理后台</h1>
+        <div class="nav">
+            <a href="index.html">首页</a>
+            <a href="user-list.html">用户管理</a>
+            <a href="category-list.html">分类管理</a>
+            <a href="snack-list.html">商品管理</a>
+            <a href="order-list.html">订单管理</a>
+            <a href="#" id="logout">退出</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="content">
+            <h2>订单管理</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>订单号</th>
+                        <th>用户</th>
+                        <th>总金额</th>
+                        <th>状态</th>
+                        <th>收货地址</th>
+                        <th>联系电话</th>
+                        <th>下单时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="orderList"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="statusModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+        <div style="position: relative; top: 50%; transform: translateY(-50%); max-width: 400px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px;">
+            <h3>更新订单状态</h3>
+            <div class="form-group" style="margin-top: 20px;">
+                <label>订单号</label>
+                <input type="text" id="orderNo" readonly style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; background: #f5f5f5;">
+            </div>
+            <div class="form-group">
+                <label>订单状态</label>
+                <select id="orderStatus" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="待发货">待发货</option>
+                    <option value="已发货">已发货</option>
+                    <option value="已完成">已完成</option>
+                    <option value="已取消">已取消</option>
+                </select>
+            </div>
+            <div style="margin-top: 20px; text-align: right;">
+                <button onclick="hideModal()" class="btn btn-danger">取消</button>
+                <button onclick="updateStatus()" class="btn btn-primary">更新</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        let currentOrderId = null;
+
+        function loadOrders() {
+            api.admin.order.list()
+                .then(data => {
+                    if (data.success) {
+                        const tbody = document.getElementById('orderList');
+                        tbody.innerHTML = '';
+                        data.orders.forEach(order => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td>${order.id}</td>
+                                <td>${order.orderNo}</td>
+                                <td>${order.username}</td>
+                                <td>¥${order.totalAmount.toFixed(2)}</td>
+                                <td>${order.status}</td>
+                                <td>${order.address}</td>
+                                <td>${order.phone}</td>
+                                <td>${new Date(order.createTime).toLocaleString()}</td>
+                                <td>
+                                    <button onclick="showStatusModal(${order.id}, '${order.orderNo}', '${order.status}')" class="btn btn-primary">更新状态</button>
+                                </td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                    } else {
+                        alert(data.message);
+                        window.location.href = 'login.html';
+                    }
+                })
+                .catch(error => {
+                    console.error('加载订单失败:', error);
+                    alert('加载订单失败');
+                });
+        }
+
+        function showStatusModal(id, orderNo, status) {
+            currentOrderId = id;
+            document.getElementById('orderNo').value = orderNo;
+            document.getElementById('orderStatus').value = status;
+            document.getElementById('statusModal').style.display = 'block';
+        }
+
+        function hideModal() {
+            document.getElementById('statusModal').style.display = 'none';
+            currentOrderId = null;
+        }
+
+        function updateStatus() {
+            const status = document.getElementById('orderStatus').value;
+            api.admin.order.updateStatus({
+                id: currentOrderId,
+                status: status
+            })
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        hideModal();
+                        loadOrders();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('更新订单状态失败:', error);
+                    alert('更新订单状态失败');
+                });
+        }
+
+        document.getElementById('logout').addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('admin');
+            window.location.href = 'login.html';
+        });
+
+        loadOrders();
+    </script>
+</body>
+</html>

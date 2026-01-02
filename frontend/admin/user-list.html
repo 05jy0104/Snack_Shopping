@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>用户管理 - 零食商店管理后台</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="header admin-header">
+        <h1>零食商店管理后台</h1>
+        <div class="nav">
+            <a href="index.html">首页</a>
+            <a href="user-list.html">用户管理</a>
+            <a href="category-list.html">分类管理</a>
+            <a href="snack-list.html">商品管理</a>
+            <a href="order-list.html">订单管理</a>
+            <a href="#" id="logout">退出</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="content">
+            <h2>用户管理</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>用户名</th>
+                        <th>真实姓名</th>
+                        <th>手机号</th>
+                        <th>邮箱</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="userList"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        const admin = JSON.parse(localStorage.getItem('admin'));
+        if (!admin) {
+            window.location.href = 'login.html';
+        }
+
+        document.getElementById('logout').addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('admin');
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        });
+
+        async function loadUsers() {
+            try {
+                const response = await api.admin.user.list();
+                const users = response.users || [];
+                const tbody = document.getElementById('userList');
+                
+                if (users.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">暂无用户</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = users.map(user => `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>${user.username}</td>
+                        <td>${user.realName || '-'}</td>
+                        <td>${user.phone || '-'}</td>
+                        <td>${user.email || '-'}</td>
+                        <td>
+                            <button onclick="deleteUser(${user.id})" class="btn btn-danger">删除</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('加载用户失败:', error);
+                document.getElementById('userList').innerHTML = '<tr><td colspan="6" style="text-align: center;">加载失败，请稍后重试</td></tr>';
+            }
+        }
+
+        async function deleteUser(id) {
+            if (!confirm('确定要删除这个用户吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await api.admin.user.delete(id);
+                if (response.success) {
+                    alert('删除成功');
+                    loadUsers();
+                } else {
+                    alert(response.message || '删除失败');
+                }
+            } catch (error) {
+                console.error('删除失败:', error);
+                alert('删除失败，请稍后重试');
+            }
+        }
+
+        loadUsers();
+    </script>
+</body>
+</html>

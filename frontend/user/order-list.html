@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>我的订单 - 零食商店</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>零食商店</h1>
+        <div class="nav">
+            <span id="welcome"></span>
+            <a href="index.html">首页</a>
+            <a href="snack-list.html">商品列表</a>
+            <a href="cart-list.html">购物车</a>
+            <a href="order-list.html">我的订单</a>
+            <a href="profile.html">个人中心</a>
+            <a href="#" id="logout">退出</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="content">
+            <h2>我的订单</h2>
+            
+            <div id="orderList"></div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            window.location.href = 'login.html';
+        } else {
+            document.getElementById('welcome').textContent = '欢迎, ' + user.realName;
+        }
+
+        document.getElementById('logout').addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        });
+
+        async function loadOrders() {
+            try {
+                const response = await api.user.order.list();
+                const orders = response.orders || [];
+                const container = document.getElementById('orderList');
+                
+                if (orders.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; padding: 50px;">暂无订单</p>';
+                    return;
+                }
+                
+                container.innerHTML = orders.map(order => `
+                    <div class="card" style="margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+                            <div>
+                                <strong>订单号:</strong> ${order.orderNo}<br>
+                                <strong>下单时间:</strong> ${new Date(order.createTime).toLocaleString()}
+                            </div>
+                            <div style="text-align: right;">
+                                <strong>状态:</strong> 
+                                <span style="color: ${getStatusColor(order.status)}">${getStatusText(order.status)}</span><br>
+                                <strong>总金额:</strong> ¥${order.totalAmount.toFixed(2)}
+                            </div>
+                        </div>
+                        <div>
+                            <strong>收货信息:</strong><br>
+                            地址: ${order.address}<br>
+                            电话: ${order.phone}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('加载订单失败:', error);
+                document.getElementById('orderList').innerHTML = '<p style="text-align: center; padding: 50px;">加载失败，请稍后重试</p>';
+            }
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': '待处理',
+                'processing': '处理中',
+                'completed': '已完成',
+                'cancelled': '已取消'
+            };
+            return statusMap[status] || status;
+        }
+
+        function getStatusColor(status) {
+            const colorMap = {
+                'pending': '#ff9800',
+                'processing': '#2196f3',
+                'completed': '#4caf50',
+                'cancelled': '#f44336'
+            };
+            return colorMap[status] || '#333';
+        }
+
+        loadOrders();
+    </script>
+</body>
+</html>
