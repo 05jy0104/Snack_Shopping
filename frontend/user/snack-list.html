@@ -130,7 +130,7 @@
         if (!user) {
             window.location.href = 'login.html';
         } else {
-            document.getElementById('welcome').textContent = '欢迎, ' + user.realName;
+            document.getElementById('welcome').textContent = '欢迎, ' + (user.realName || user.username);
         }
 
         document.getElementById('logout').addEventListener('click', function(e) {

@@ -55,7 +55,7 @@
         if (!user) {
             window.location.href = 'login.html';
         } else {
-            document.getElementById('welcome').textContent = '欢迎, ' + user.realName;
+            document.getElementById('welcome').textContent = '欢迎, ' + (user.realName || user.username);
         }
 
         document.getElementById('logout').addEventListener('click', function(e) {
@@ -80,7 +80,7 @@
                 if (response.success) {
                     alert('修改成功');
                     localStorage.setItem('user', JSON.stringify(response.user));
-                    document.getElementById('welcome').textContent = '欢迎, ' + response.user.realName;
+                    document.getElementById('welcome').textContent = '欢迎, ' + (response.user.realName || response.user.username);
                 } else {
                     alert(response.message || '修改失败');
                 }

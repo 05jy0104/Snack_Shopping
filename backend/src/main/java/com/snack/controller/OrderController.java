@@ -29,9 +29,9 @@ public class OrderController {
     private UserService userService;
 
     @GetMapping("/list")
-    public Map<String, Object> list(HttpSession session) {
+    public Map<String, Object> list(@RequestParam(required = false) Integer userId, HttpSession session) {
         Map<String, Object> result = new HashMap<>();
-        Integer userId = (Integer) session.getAttribute("userId");
+        userId = userId != null ? userId : (Integer) session.getAttribute("userId");
         if (userId == null) {
             result.put("success", false);
             result.put("message", "未登录");
@@ -56,7 +56,7 @@ public class OrderController {
     @PostMapping("/create")
     public Map<String, Object> create(@RequestBody Map<String, String> params, HttpSession session) {
         Map<String, Object> result = new HashMap<>();
-        Integer userId = (Integer) session.getAttribute("userId");
+        Integer userId = params.get("userId") != null ? Integer.parseInt(params.get("userId")) : (Integer) session.getAttribute("userId");
         if (userId == null) {
             result.put("success", false);
             result.put("message", "未登录");

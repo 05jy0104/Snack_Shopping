@@ -90,16 +90,27 @@ const api = {
             }
         },
         order: {
-            list: () => request('/user/order/list', {
-                method: 'GET'
-            }),
+            list: () => {
+                const user = JSON.parse(localStorage.getItem('user'));
+                const params = user && user.id ? { userId: user.id } : {};
+                const queryString = new URLSearchParams(params).toString();
+                return request(`/user/order/list${queryString ? '?' + queryString : ''}`, {
+                    method: 'GET'
+                });
+            },
             detail: (id) => request(`/user/order/detail/${id}`, {
                 method: 'GET'
             }),
-            create: (data) => request('/user/order/create', {
-                method: 'POST',
-                body: JSON.stringify(data)
-            })
+            create: (data) => {
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (user && user.id) {
+                    data.userId = user.id;
+                }
+                return request('/user/order/create', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+            }
         }
     },
     admin: {

@@ -66,6 +66,7 @@ public class UserController {
         user.setUsername(username);
         user.setPassword(password);
         user.setPhone(phone);
+        user.setRealName(username);
         
         User existUser = userService.register(user);
         if (existUser != null) {
