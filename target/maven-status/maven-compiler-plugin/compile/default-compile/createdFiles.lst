@@ -1,0 +1,14 @@
+com\snack\entity\Comment.class
+com\snack\entity\Admin.class
+com\snack\entity\OrderItem.class
+com\snack\SnackShoppingApplication.class
+com\snack\entity\CustomerService.class
+com\snack\entity\Order.class
+com\snack\entity\Category.class
+com\snack\entity\Recharge.class
+com\snack\entity\Banner.class
+com\snack\entity\News.class
+com\snack\entity\User.class
+com\snack\entity\Cart.class
+com\snack\entity\Collection.class
+com\snack\entity\Snack.class

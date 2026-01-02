@@ -15,7 +15,7 @@
     <artifactId>snack-shopping</artifactId>
     <version>1.0.0</version>
     <name>snack-shopping</name>
-    <description>ÁãÊ³ÉÌµê¹ÜÀíÏµÍ³</description>
+    <description>ï¿½ï¿½Ê³ï¿½Ìµï¿½ï¿½ï¿½ï¿½ÏµÍ³</description>
 
     <properties>
         <java.version>1.8</java.version>
@@ -40,8 +40,8 @@
         </dependency>
 
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
             <version>8.0.33</version>
         </dependency>
 

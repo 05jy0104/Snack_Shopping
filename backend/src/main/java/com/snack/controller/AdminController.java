@@ -18,7 +18,7 @@ public class AdminController {
         String password = params.get("password");
         if ("admin".equals(username) && "admin123".equals(password)) {
             Admin admin = new Admin();
-            admin.setUsername(username);
+            
             session.setAttribute("admin", admin);
             result.put("success", true);
             result.put("message", "登录成功");

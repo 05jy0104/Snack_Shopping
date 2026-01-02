@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snack.mapper.NewsMapper">
+    <resultMap id="BaseResultMap" type="com.snack.entity.News">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="image" property="image"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT * FROM news ORDER BY create_time DESC
+    </select>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT * FROM news WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.snack.entity.News" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO news (title, content, image, create_time)
+        VALUES (#{title}, #{content}, #{image}, #{createTime})
+    </insert>
+
+    <update id="update" parameterType="com.snack.entity.News">
+        UPDATE news
+        <set>
+            <if test="title != null">title = #{title},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="image != null">image = #{image},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM news WHERE id = #{id}
+    </delete>
+</mapper>

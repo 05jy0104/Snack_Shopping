@@ -7,6 +7,7 @@ public interface UserService {
     User login(String username, String password);
     User register(User user);
     User findById(Integer id);
+    User findByUsername(String username);
     List<User> findAll();
     void update(User user);
     void delete(Integer id);

@@ -33,10 +33,27 @@ public class CartController {
         }
 
         Integer userId = (Integer) session.getAttribute("userId");
+        if (userId == null) {
+            result.put("success", false);
+            result.put("message", "用户ID不存在");
+            return result;
+        }
+
         Integer snackId = (Integer) params.get("snackId");
+        if (snackId == null) {
+            result.put("success", false);
+            result.put("message", "商品ID不能为空");
+            return result;
+        }
+
         Integer quantity = params.get("quantity") != null ? (Integer) params.get("quantity") : 1;
 
         Snack snack = snackService.findById(snackId);
+        if (snack == null) {
+            result.put("success", false);
+            result.put("message", "商品不存在");
+            return result;
+        }
 
         Cart cart = new Cart();
         cart.setUserId(userId);

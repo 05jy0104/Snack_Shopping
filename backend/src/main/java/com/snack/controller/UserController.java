@@ -17,14 +17,18 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/login")
-    public Map<String, Object> login(@RequestBody User loginUser, HttpSession session) {
+    public Map<String, Object> login(@RequestBody Map<String, String> params, HttpSession session) {
         Map<String, Object> result = new HashMap<>();
-        User user = userService.login(loginUser.getUsername(), loginUser.getPassword());
+        String username = params.get("username");
+        String password = params.get("password");
+        User user = userService.login(username, password);
         if (user != null) {
-            session.setAttribute("user", user);
+            User loginUser = userService.findByUsername(username);
+            session.setAttribute("user", loginUser);
+            session.setAttribute("userId", loginUser.getId());
             result.put("success", true);
             result.put("message", "登录成功");
-            result.put("user", user);
+            result.put("user", loginUser);
         } else {
             result.put("success", false);
             result.put("message", "用户名或密码错误");
@@ -72,15 +76,15 @@ public class UserController {
     @PostMapping("/profile")
     public Map<String, Object> updateProfile(@RequestBody User user, HttpSession session) {
         Map<String, Object> result = new HashMap<>();
-        User currentUser = (User) session.getAttribute("user");
-        if (currentUser == null) {
+        Integer userId = (Integer) session.getAttribute("userId");
+        if (userId == null) {
             result.put("success", false);
             result.put("message", "未登录");
             return result;
         }
-        user.setId(currentUser.getId());
+        user.setId(userId);
         userService.update(user);
-        User updatedUser = userService.findById(currentUser.getId());
+        User updatedUser = userService.findById(userId);
         session.setAttribute("user", updatedUser);
         result.put("success", true);
         result.put("message", "更新成功");

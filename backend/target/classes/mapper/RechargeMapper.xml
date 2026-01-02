@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snack.mapper.RechargeMapper">
+    <resultMap id="BaseResultMap" type="com.snack.entity.Recharge">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="username" property="username"/>
+        <result column="amount" property="amount"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="findByUserId" resultMap="BaseResultMap">
+        SELECT * FROM recharge WHERE user_id = #{userId} ORDER BY create_time DESC
+    </select>
+
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT * FROM recharge ORDER BY create_time DESC
+    </select>
+
+    <insert id="insert" parameterType="com.snack.entity.Recharge" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO recharge (user_id, username, amount, create_time)
+        VALUES (#{userId}, #{username}, #{amount}, #{createTime})
+    </insert>
+</mapper>
