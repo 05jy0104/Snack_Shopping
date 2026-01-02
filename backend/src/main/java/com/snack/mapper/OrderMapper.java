@@ -9,6 +9,7 @@ public interface OrderMapper {
     List<Order> findByUserId(Integer userId);
     List<Order> findAll();
     Order findById(Integer id);
+    Order findByIdWithItems(Integer id);
     Order findByOrderNo(String orderNo);
     void insert(Order order);
     void update(Order order);

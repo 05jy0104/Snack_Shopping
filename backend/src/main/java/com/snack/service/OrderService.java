@@ -8,6 +8,7 @@ public interface OrderService {
     List<Order> findByUserId(Integer userId);
     List<Order> findAll();
     Order findById(Integer id);
+    Order findByIdWithItems(Integer id);
     void updateStatus(Integer id, String status);
     void delete(Integer id);
 }

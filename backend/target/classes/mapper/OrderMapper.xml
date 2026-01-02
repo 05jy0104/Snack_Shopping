@@ -13,6 +13,18 @@
         <result column="create_time" property="createTime"/>
     </resultMap>
 
+    <resultMap id="OrderWithItemsResultMap" type="com.snack.entity.Order" extends="BaseResultMap">
+        <collection property="orderItems" ofType="com.snack.entity.OrderItem">
+            <id column="item_id" property="id"/>
+            <result column="order_id" property="orderId"/>
+            <result column="snack_id" property="snackId"/>
+            <result column="snack_name" property="snackName"/>
+            <result column="price" property="price"/>
+            <result column="quantity" property="quantity"/>
+            <result column="subtotal" property="subtotal"/>
+        </collection>
+    </resultMap>
+
     <select id="findByUserId" resultMap="BaseResultMap">
         SELECT * FROM orders WHERE user_id = #{userId} ORDER BY create_time DESC
     </select>
@@ -23,6 +35,13 @@
 
     <select id="findById" resultMap="BaseResultMap">
         SELECT * FROM orders WHERE id = #{id}
+    </select>
+
+    <select id="findByIdWithItems" resultMap="OrderWithItemsResultMap">
+        SELECT o.*, oi.id as item_id, oi.order_id, oi.snack_id, oi.snack_name, oi.price, oi.quantity, oi.subtotal
+        FROM orders o
+        LEFT JOIN order_item oi ON o.id = oi.order_id
+        WHERE o.id = #{id}
     </select>
 
     <select id="findByOrderNo" resultMap="BaseResultMap">

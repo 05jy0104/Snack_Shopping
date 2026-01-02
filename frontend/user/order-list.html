@@ -27,6 +27,118 @@
         </div>
     </div>
 
+    <div id="orderDetailModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>订单详情</h2>
+            <div id="orderDetailContent"></div>
+        </div>
+    </div>
+
+    <style>
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border-radius: 8px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-item-info {
+            flex: 1;
+        }
+
+        .order-item-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .order-item-price {
+            color: #666;
+        }
+
+        .order-item-quantity {
+            color: #666;
+            margin-left: 20px;
+        }
+
+        .order-item-subtotal {
+            font-weight: bold;
+            color: #f44336;
+            min-width: 100px;
+            text-align: right;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-detail {
+            background-color: #2196f3;
+            color: white;
+        }
+
+        .btn-return {
+            background-color: #ff9800;
+            color: white;
+        }
+
+        .btn-exchange {
+            background-color: #9c27b0;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+    </style>
+
     <script src="../js/api.js"></script>
     <script>
         const user = JSON.parse(localStorage.getItem('user'));
@@ -72,6 +184,13 @@
                             地址: ${order.address}<br>
                             电话: ${order.phone}
                         </div>
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                            <button class="btn btn-detail" onclick="showOrderDetail(${order.id})">查看详情</button>
+                            ${order.status === '已完成' ? `
+                                <button class="btn btn-return" onclick="returnOrder(${order.id})">退货</button>
+                                <button class="btn btn-exchange" onclick="exchangeOrder(${order.id})">换货</button>
+                            ` : ''}
+                        </div>
                     </div>
                 `).join('');
             } catch (error) {
@@ -80,8 +199,103 @@
             }
         }
 
+        async function showOrderDetail(orderId) {
+            try {
+                const response = await api.user.order.detail(orderId);
+                const order = response.order;
+                const modal = document.getElementById('orderDetailModal');
+                const content = document.getElementById('orderDetailContent');
+                
+                const itemsHtml = order.orderItems && order.orderItems.length > 0 
+                    ? order.orderItems.map(item => `
+                        <div class="order-item">
+                            <div class="order-item-info">
+                                <div class="order-item-name">${item.snackName}</div>
+                                <div class="order-item-price">单价: ¥${item.price.toFixed(2)}</div>
+                            </div>
+                            <div class="order-item-quantity">数量: ${item.quantity}</div>
+                            <div class="order-item-subtotal">¥${item.subtotal.toFixed(2)}</div>
+                        </div>
+                    `).join('')
+                    : '<p style="text-align: center; padding: 20px;">暂无商品信息</p>';
+                
+                content.innerHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <p><strong>订单号:</strong> ${order.orderNo}</p>
+                        <p><strong>下单时间:</strong> ${new Date(order.createTime).toLocaleString()}</p>
+                        <p><strong>订单状态:</strong> <span style="color: ${getStatusColor(order.status)}">${getStatusText(order.status)}</span></p>
+                        <p><strong>收货地址:</strong> ${order.address}</p>
+                        <p><strong>联系电话:</strong> ${order.phone}</p>
+                    </div>
+                    <h3>商品清单</h3>
+                    <div style="margin-top: 10px;">
+                        ${itemsHtml}
+                    </div>
+                    <div style="margin-top: 20px; text-align: right; font-size: 18px; font-weight: bold;">
+                        <span>订单总计: ¥${order.totalAmount.toFixed(2)}</span>
+                    </div>
+                `;
+                
+                modal.style.display = 'block';
+            } catch (error) {
+                console.error('加载订单详情失败:', error);
+                alert('加载订单详情失败，请稍后重试');
+            }
+        }
+
+        async function returnOrder(orderId) {
+            if (confirm('确定要申请退货吗？')) {
+                try {
+                    const reason = prompt('请输入退货原因:');
+                    if (reason) {
+                        await api.user.order.return({ orderId, reason });
+                        alert('退货申请已提交');
+                        loadOrders();
+                    }
+                } catch (error) {
+                    console.error('退货申请失败:', error);
+                    alert('退货申请失败，请稍后重试');
+                }
+            }
+        }
+
+        async function exchangeOrder(orderId) {
+            if (confirm('确定要申请换货吗？')) {
+                try {
+                    const reason = prompt('请输入换货原因:');
+                    if (reason) {
+                        await api.user.order.exchange({ orderId, reason });
+                        alert('换货申请已提交');
+                        loadOrders();
+                    }
+                } catch (error) {
+                    console.error('换货申请失败:', error);
+                    alert('换货申请失败，请稍后重试');
+                }
+            }
+        }
+
+        const modal = document.getElementById('orderDetailModal');
+        const closeBtn = document.getElementsByClassName('close')[0];
+
+        closeBtn.onclick = function() {
+            modal.style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
         function getStatusText(status) {
             const statusMap = {
+                '待发货': '待发货',
+                '已发货': '已发货',
+                '已完成': '已完成',
+                '已取消': '已取消',
+                '退货中': '退货中',
+                '换货中': '换货中',
                 'pending': '待处理',
                 'processing': '处理中',
                 'completed': '已完成',
@@ -92,6 +306,12 @@
 
         function getStatusColor(status) {
             const colorMap = {
+                '待发货': '#ff9800',
+                '已发货': '#2196f3',
+                '已完成': '#4caf50',
+                '已取消': '#f44336',
+                '退货中': '#ff5722',
+                '换货中': '#9c27b0',
                 'pending': '#ff9800',
                 'processing': '#2196f3',
                 'completed': '#4caf50',

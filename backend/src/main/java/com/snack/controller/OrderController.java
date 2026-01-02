@@ -47,9 +47,33 @@ public class OrderController {
     @GetMapping("/detail/{id}")
     public Map<String, Object> detail(@PathVariable Integer id) {
         Map<String, Object> result = new HashMap<>();
-        Order order = orderService.findById(id);
+        Order order = orderService.findByIdWithItems(id);
         result.put("success", true);
         result.put("order", order);
+        return result;
+    }
+
+    @PostMapping("/return")
+    public Map<String, Object> returnOrder(@RequestBody Map<String, String> params) {
+        Map<String, Object> result = new HashMap<>();
+        Integer orderId = Integer.parseInt(params.get("orderId"));
+        String reason = params.get("reason");
+
+        orderService.updateStatus(orderId, "退货中");
+        result.put("success", true);
+        result.put("message", "退货申请已提交");
+        return result;
+    }
+
+    @PostMapping("/exchange")
+    public Map<String, Object> exchangeOrder(@RequestBody Map<String, String> params) {
+        Map<String, Object> result = new HashMap<>();
+        Integer orderId = Integer.parseInt(params.get("orderId"));
+        String reason = params.get("reason");
+
+        orderService.updateStatus(orderId, "换货中");
+        result.put("success", true);
+        result.put("message", "换货申请已提交");
         return result;
     }
 

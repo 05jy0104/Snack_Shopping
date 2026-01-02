@@ -89,6 +89,11 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public Order findByIdWithItems(Integer id) {
+        return orderMapper.findByIdWithItems(id);
+    }
+
+    @Override
     public void updateStatus(Integer id, String status) {
         Order order = orderMapper.findById(id);
         if (order != null) {

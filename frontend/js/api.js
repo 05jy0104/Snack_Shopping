@@ -110,7 +110,15 @@ const api = {
                     method: 'POST',
                     body: JSON.stringify(data)
                 });
-            }
+            },
+            return: (data) => request('/user/order/return', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            }),
+            exchange: (data) => request('/user/order/exchange', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            })
         }
     },
     admin: {

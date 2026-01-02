@@ -1,6 +1,7 @@
 package com.snack.entity;
 
 import java.util.Date;
+import java.util.List;
 
 public class Order {
     private Integer id;
@@ -12,6 +13,7 @@ public class Order {
     private String address;
     private String phone;
     private Date createTime;
+    private List<OrderItem> orderItems;
 
     public Integer getId() {
         return id;
@@ -83,5 +85,13 @@ public class Order {
 
     public void setCreateTime(Date createTime) {
         this.createTime = createTime;
+    }
+
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
+    }
+
+    public void setOrderItems(List<OrderItem> orderItems) {
+        this.orderItems = orderItems;
     }
 }
