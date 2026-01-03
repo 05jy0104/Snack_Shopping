@@ -117,6 +117,15 @@ body {
     background-color: #45a049;
 }
 
+.btn-pink {
+    background-color: #ff69b4;
+    color: white;
+}
+
+.btn-pink:hover {
+    background-color: #ff1493;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -334,6 +343,18 @@ table tr:hover {
     background: #5568d3;
 }
 
+.admin-page .feature h3 {
+    color: #f5576c;
+}
+
+.admin-page .feature .btn {
+    background: #f5576c;
+}
+
+.admin-page .feature .btn:hover {
+    background: #f5576c;
+}
+
 .menu {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -363,4 +384,12 @@ table tr:hover {
 .menu-item a {
     color: #666;
     text-decoration: none;
+    display: block;
+    margin-bottom: 15px;
+}
+
+.menu-item button {
+    display: block;
+    margin: 0 auto;
+    width: 100px;
 }

@@ -17,20 +17,6 @@ public class AdminUserController {
     @Autowired
     private UserService userService;
 
-    @GetMapping("/list")
-    public Map<String, Object> list(HttpSession session) {
-        Map<String, Object> result = new HashMap<>();
-        if (session.getAttribute("admin") == null) {
-            result.put("success", false);
-            result.put("message", "未登录");
-            return result;
-        }
-        List<User> users = userService.findAll();
-        result.put("success", true);
-        result.put("users", users);
-        return result;
-    }
-
     @GetMapping("/delete/{id}")
     public Map<String, Object> delete(@PathVariable Integer id) {
         Map<String, Object> result = new HashMap<>();

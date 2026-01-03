@@ -174,6 +174,21 @@ const api = {
             list: () => request('/admin/user/list', {
                 method: 'GET'
             }),
+            add: (data) => request('/admin/user/add', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            }),
+            detail: (id) => request(`/admin/user/detail/${id}`, {
+                method: 'GET'
+            }),
+            edit: (data) => request('/admin/user/edit', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            }),
+            resetPassword: (data) => request('/admin/user/resetPassword', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            }),
             delete: (id) => request(`/admin/user/delete/${id}`, {
                 method: 'GET'
             })

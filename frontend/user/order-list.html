@@ -111,12 +111,16 @@
         }
 
         .btn {
-            padding: 8px 16px;
+            padding: 10px 20px;
             margin: 5px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-size: 14px;
+            min-width: 80px;
+            display: inline-block;
+            text-align: center;
+            line-height: 1.5;
         }
 
         .btn-detail {
@@ -154,50 +158,6 @@
             localStorage.removeItem('token');
             window.location.href = 'login.html';
         });
-
-        async function loadOrders() {
-            try {
-                const response = await api.user.order.list();
-                const orders = response.orders || [];
-                const container = document.getElementById('orderList');
-                
-                if (orders.length === 0) {
-                    container.innerHTML = '<p style="text-align: center; padding: 50px;">暂无订单</p>';
-                    return;
-                }
-                
-                container.innerHTML = orders.map(order => `
-                    <div class="card" style="margin-bottom: 20px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
-                            <div>
-                                <strong>订单号:</strong> ${order.orderNo}<br>
-                                <strong>下单时间:</strong> ${new Date(order.createTime).toLocaleString()}
-                            </div>
-                            <div style="text-align: right;">
-                                <strong>状态:</strong> 
-                                <span style="color: ${getStatusColor(order.status)}">${getStatusText(order.status)}</span><br>
-                                <strong>总金额:</strong> ¥${order.totalAmount.toFixed(2)}
-                            </div>
-                        </div>
-                        <div>
-                            <strong>收货信息:</strong><br>
-                            地址: ${order.address}<br>
-                            电话: ${order.phone}
-                        </div>
-                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
-                            <button class="btn btn-detail" onclick="showOrderDetail(${order.id})">查看详情</button>
-                            ${order.status === '已完成' ? `
-                                <button class="btn btn-return" onclick="returnOrder(${order.id})">退货</button>
-                                <button class="btn btn-exchange" onclick="exchangeOrder(${order.id})">换货</button>
-                            ` : ''}
-                        </div>
-                    </div>
-                `).join('');
-            } catch (error) {
-                console.error('加载订单失败:', error);
-                document.getElementById('orderList').innerHTML = '<p style="text-align: center; padding: 50px;">加载失败，请稍后重试</p>';
-            }
-        }
 
         async function showOrderDetail(orderId) {
             try {
@@ -275,6 +235,50 @@
             }
         }
 
+        async function loadOrders() {
+            try {
+                const response = await api.user.order.list();
+                const orders = response.orders || [];
+                const container = document.getElementById('orderList');
+                
+                if (orders.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; padding: 50px;">暂无订单</p>';
+                    return;
+                }
+                
+                container.innerHTML = orders.map(order => `
+                    <div class="card" style="margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+                            <div>
+                                <strong>订单号:</strong> ${order.orderNo}<br>
+                                <strong>下单时间:</strong> ${new Date(order.createTime).toLocaleString()}
+                            </div>
+                            <div style="text-align: right;">
+                                <strong>状态:</strong> 
+                                <span style="color: ${getStatusColor(order.status)}">${getStatusText(order.status)}</span><br>
+                                <strong>总金额:</strong> ¥${order.totalAmount.toFixed(2)}
+                            </div>
+                        </div>
+                        <div>
+                            <strong>收货信息:</strong><br>
+                            地址: ${order.address}<br>
+                            电话: ${order.phone}
+                        </div>
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                            <button class="btn btn-detail" onclick="showOrderDetail(${order.id})">查看详情</button>
+                            ${order.status === '已完成' ? `
+                                <button class="btn btn-return" onclick="returnOrder(${order.id})">退货</button>
+                                <button class="btn btn-exchange" onclick="exchangeOrder(${order.id})">换货</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('加载订单失败:', error);
+                document.getElementById('orderList').innerHTML = '<p style="text-align: center; padding: 50px;">加载失败，请稍后重试</p>';
+            }
+        }
+
         const modal = document.getElementById('orderDetailModal');
         const closeBtn = document.getElementsByClassName('close')[0];
 
@@ -321,6 +325,10 @@
         }
 
         loadOrders();
+
+        window.showOrderDetail = showOrderDetail;
+        window.returnOrder = returnOrder;
+        window.exchangeOrder = exchangeOrder;
     </script>
 </body>
 </html>
