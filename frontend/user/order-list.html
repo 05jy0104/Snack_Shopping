@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>我的订单 - 零食商店</title>
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/notification.css">
 </head>
 <body>
     <div class="header">
@@ -35,6 +36,36 @@
         </div>
     </div>
 
+    <div id="returnModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>申请退货</h2>
+            <div style="margin-top: 20px;">
+                <label style="display: block; margin-bottom: 10px; font-weight: bold;">退货原因:</label>
+                <textarea id="returnReason" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;" placeholder="请输入退货原因"></textarea>
+                <div style="margin-top: 20px; text-align: right;">
+                    <button onclick="hideReturnModal()" class="btn btn-cancel">取消</button>
+                    <button onclick="submitReturn()" class="btn btn-return">提交</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="exchangeModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>申请换货</h2>
+            <div style="margin-top: 20px;">
+                <label style="display: block; margin-bottom: 10px; font-weight: bold;">换货原因:</label>
+                <textarea id="exchangeReason" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;" placeholder="请输入换货原因"></textarea>
+                <div style="margin-top: 20px; text-align: right;">
+                    <button onclick="hideExchangeModal()" class="btn btn-cancel">取消</button>
+                    <button onclick="submitExchange()" class="btn btn-exchange">提交</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <style>
         .modal {
             position: fixed;
@@ -48,14 +79,18 @@
 
         .modal-content {
             background-color: #fefefe;
-            margin: 5% auto;
-            padding: 20px;
+            margin: auto;
+            padding: 30px;
             border: 1px solid #888;
-            width: 80%;
-            max-width: 800px;
-            max-height: 80vh;
+            width: 500px;
+            max-height: 70vh;
             overflow-y: auto;
-            border-radius: 8px;
+            border-radius: 10px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         }
 
         .close {
@@ -149,6 +184,7 @@
     </style>
 
     <script src="../js/api.js"></script>
+    <script src="../js/notification.js"></script>
     <script>
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user) {
@@ -204,53 +240,82 @@
                 modal.style.display = 'block';
             } catch (error) {
                 console.error('加载订单详情失败:', error);
-                alert('加载订单详情失败，请稍后重试');
+                notification.error('加载订单详情失败，请稍后重试');
             }
         }
 
-        async function returnOrder(orderId) {
-            if (confirm('确定要申请退货吗？')) {
-                try {
-                    const reason = prompt('请输入退货原因:');
-                    if (reason) {
-                        await api.user.order.return({ orderId, reason });
-                        alert('退货申请已提交');
-                        loadOrders();
-                    }
-                } catch (error) {
-                    console.error('退货申请失败:', error);
-                    alert('退货申请失败，请稍后重试');
-                }
+        let currentReturnOrderId = null;
+        let currentExchangeOrderId = null;
+
+        function showReturnModal(orderId) {
+            currentReturnOrderId = orderId;
+            document.getElementById('returnReason').value = '';
+            document.getElementById('returnModal').style.display = 'block';
+        }
+
+        function hideReturnModal() {
+            document.getElementById('returnModal').style.display = 'none';
+            currentReturnOrderId = null;
+        }
+
+        async function submitReturn() {
+            const reason = document.getElementById('returnReason').value.trim();
+            if (!reason) {
+                notification.warning('请输入退货原因');
+                return;
+            }
+            
+            try {
+                await api.user.order.return({ orderId: currentReturnOrderId, reason });
+                notification.success('退货申请已提交');
+                hideReturnModal();
+                loadOrders();
+            } catch (error) {
+                console.error('退货申请失败:', error);
+                notification.error('退货申请失败，请稍后重试');
             }
         }
 
-        async function exchangeOrder(orderId) {
-            if (confirm('确定要申请换货吗？')) {
-                try {
-                    const reason = prompt('请输入换货原因:');
-                    if (reason) {
-                        await api.user.order.exchange({ orderId, reason });
-                        alert('换货申请已提交');
-                        loadOrders();
-                    }
-                } catch (error) {
-                    console.error('换货申请失败:', error);
-                    alert('换货申请失败，请稍后重试');
-                }
+        function showExchangeModal(orderId) {
+            currentExchangeOrderId = orderId;
+            document.getElementById('exchangeReason').value = '';
+            document.getElementById('exchangeModal').style.display = 'block';
+        }
+
+        function hideExchangeModal() {
+            document.getElementById('exchangeModal').style.display = 'none';
+            currentExchangeOrderId = null;
+        }
+
+        async function submitExchange() {
+            const reason = document.getElementById('exchangeReason').value.trim();
+            if (!reason) {
+                notification.warning('请输入换货原因');
+                return;
+            }
+            
+            try {
+                await api.user.order.exchange({ orderId: currentExchangeOrderId, reason });
+                notification.success('换货申请已提交');
+                hideExchangeModal();
+                loadOrders();
+            } catch (error) {
+                console.error('换货申请失败:', error);
+                notification.error('换货申请失败，请稍后重试');
             }
         }
 
         async function cancelOrder(orderId) {
-            if (confirm('确定要取消这个订单吗？')) {
+            notification.confirm('确定要取消这个订单吗？', async () => {
                 try {
                     await api.user.order.cancel({ orderId });
-                    alert('订单已取消');
+                    notification.success('订单已取消');
                     loadOrders();
                 } catch (error) {
                     console.error('取消订单失败:', error);
-                    alert('取消订单失败，请稍后重试');
+                    notification.error('取消订单失败，请稍后重试');
                 }
-            }
+            });
         }
 
         async function loadOrders() {
@@ -288,8 +353,8 @@
                                 <button class="btn btn-cancel" onclick="cancelOrder(${order.id})">取消订单</button>
                             ` : ''}
                             ${order.status === '已完成' ? `
-                                <button class="btn btn-return" onclick="returnOrder(${order.id})">退货</button>
-                                <button class="btn btn-exchange" onclick="exchangeOrder(${order.id})">换货</button>
+                                <button class="btn btn-return" onclick="showReturnModal(${order.id})">退货</button>
+                                <button class="btn btn-exchange" onclick="showExchangeModal(${order.id})">换货</button>
                             ` : ''}
                         </div>
                     </div>
@@ -300,16 +365,28 @@
             }
         }
 
-        const modal = document.getElementById('orderDetailModal');
-        const closeBtn = document.getElementsByClassName('close')[0];
+        const orderDetailModal = document.getElementById('orderDetailModal');
+        const returnModal = document.getElementById('returnModal');
+        const exchangeModal = document.getElementById('exchangeModal');
+        const closeBtns = document.getElementsByClassName('close');
 
-        closeBtn.onclick = function() {
-            modal.style.display = 'none';
+        for (let i = 0; i < closeBtns.length; i++) {
+            closeBtns[i].onclick = function() {
+                orderDetailModal.style.display = 'none';
+                returnModal.style.display = 'none';
+                exchangeModal.style.display = 'none';
+            }
         }
 
         window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = 'none';
+            if (event.target == orderDetailModal) {
+                orderDetailModal.style.display = 'none';
+            }
+            if (event.target == returnModal) {
+                returnModal.style.display = 'none';
+            }
+            if (event.target == exchangeModal) {
+                exchangeModal.style.display = 'none';
             }
         }
 

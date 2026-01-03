@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>管理员管理 - 零食商店管理后台</title>
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/notification.css">
 </head>
 <body>
     <div class="header admin-header">
@@ -65,6 +66,7 @@
     </div>
 
     <script src="../js/api.js"></script>
+    <script src="../js/notification.js"></script>
     <script>
         const admin = JSON.parse(localStorage.getItem('admin'));
         if (!admin) {
@@ -132,11 +134,11 @@
                     document.getElementById('adminRealName').value = data.admin.realName || '';
                     document.getElementById('adminModal').style.display = 'block';
                 } else {
-                    alert('加载失败，请稍后重试');
+                    notification.error('加载失败，请稍后重试');
                 }
             } catch (error) {
                 console.error('加载管理员信息失败:', error);
-                alert('加载失败，请稍后重试');
+                notification.error('加载失败，请稍后重试');
             }
         }
 
@@ -151,12 +153,12 @@
             const realName = document.getElementById('adminRealName').value;
             
             if (!username) {
-                alert('请输入用户名');
+                notification.warning('请输入用户名');
                 return;
             }
             
             if (!currentAdminId && !password) {
-                alert('请输入密码');
+                notification.warning('请输入密码');
                 return;
             }
             
@@ -169,35 +171,33 @@
                 }
                 
                 if (response.success) {
-                    alert('保存成功');
+                    notification.success('保存成功');
                     hideModal();
                     loadAdmins();
                 } else {
-                    alert(response.message || '保存失败');
+                    notification.error(response.message || '保存失败');
                 }
             } catch (error) {
                 console.error('保存失败:', error);
-                alert('保存失败，请稍后重试');
+                notification.error('保存失败，请稍后重试');
             }
         }
 
         async function deleteAdmin(id) {
-            if (!confirm('确定要删除这个管理员吗？')) {
-                return;
-            }
-            
-            try {
-                const response = await api.admin.admin.delete(id);
-                if (response.success) {
-                    alert('删除成功');
-                    loadAdmins();
-                } else {
-                    alert(response.message || '删除失败');
+            notification.confirm('确定要删除这个管理员吗？', async () => {
+                try {
+                    const response = await api.admin.admin.delete(id);
+                    if (response.success) {
+                        notification.success('删除成功');
+                        loadAdmins();
+                    } else {
+                        notification.error(response.message || '删除失败');
+                    }
+                } catch (error) {
+                    console.error('删除失败:', error);
+                    notification.error('删除失败，请稍后重试');
                 }
-            } catch (error) {
-                console.error('删除失败:', error);
-                alert('删除失败，请稍后重试');
-            }
+            });
         }
 
         loadAdmins();

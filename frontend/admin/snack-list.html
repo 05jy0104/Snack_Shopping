@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>商品管理 - 零食商店管理后台</title>
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/notification.css">
 </head>
 <body>
     <div class="header admin-header">
@@ -36,45 +37,8 @@
         </div>
     </div>
 
-    <div id="snackModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
-        <div style="position: relative; top: 50%; transform: translateY(-50%); max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; max-height: 90vh; overflow-y: auto;">
-            <h3 id="modalTitle">添加商品</h3>
-            <div class="form-group" style="margin-top: 20px;">
-                <label>商品名称</label>
-                <input type="text" id="snackName" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-            </div>
-            <div class="form-group">
-                <label>分类</label>
-                <select id="snackCategoryId" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-                    <option value="">请选择分类</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>价格</label>
-                <input type="number" id="snackPrice" step="0.01" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-            </div>
-            <div class="form-group">
-                <label>库存</label>
-                <input type="number" id="snackStock" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-            </div>
-            <div class="form-group">
-                <label>描述</label>
-                <textarea id="snackDescription" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
-            </div>
-            <div class="form-group">
-                <label>图片</label>
-                <input type="file" id="snackImageFile" accept="image/*" onchange="previewImage(this)" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-                <input type="hidden" id="snackImage" value="">
-                <div id="imagePreview" style="margin-top: 10px; text-align: center;"></div>
-            </div>
-            <div style="margin-top: 20px; text-align: right;">
-                <button onclick="hideModal()" class="btn btn-danger">取消</button>
-                <button onclick="saveSnack()" class="btn btn-primary">保存</button>
-            </div>
-        </div>
-    </div>
-
     <script src="../js/api.js"></script>
+    <script src="../js/notification.js"></script>
     <script>
         const admin = JSON.parse(localStorage.getItem('admin'));
         if (!admin) {
@@ -148,11 +112,14 @@
             
             container.innerHTML = snacks.map(snack => {
                 const category = categories.find(c => c.id === snack.categoryId);
-                const imageUrl = snack.image || 'https://via.placeholder.com/200x200?text=No+Image';
+                const imageUrl = snack.image;
                 return `
                     <div class="snack-card">
                         <div class="snack-image">
-                            <img src="${imageUrl}" alt="${snack.name}" onerror="this.src='https://via.placeholder.com/200x200?text=No+Image'">
+                            ${imageUrl 
+                                ? `<img src="${imageUrl}" alt="${snack.name}" onerror="this.parentElement.innerHTML='<div style=\'width:200px;height:200px;display:flex;align-items:center;justify-content:center;background:#f5f5f5;color:#999;border-radius:4px;\'>暂无图片</div>'">`
+                                : `<div style="width:200px;height:200px;display:flex;align-items:center;justify-content:center;background:#f5f5f5;color:#999;border-radius:4px;">暂无图片</div>`
+                            }
                         </div>
                         <div class="snack-info">
                             <h3 class="snack-name">${snack.name}</h3>
@@ -190,15 +157,59 @@
 
         function showAddModal() {
             currentSnackId = null;
-            document.getElementById('modalTitle').textContent = '添加商品';
-            document.getElementById('snackName').value = '';
-            document.getElementById('snackCategoryId').value = '';
-            document.getElementById('snackPrice').value = '';
-            document.getElementById('snackStock').value = '';
-            document.getElementById('snackDescription').value = '';
-            document.getElementById('snackImage').value = '';
-            document.getElementById('imagePreview').innerHTML = '';
-            document.getElementById('snackModal').style.display = 'block';
+            
+            const categoryOptions = categories.map(cat => 
+                `<option value="${cat.id}">${cat.name}</option>`
+            ).join('');
+            
+            const modalContent = `
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">商品名称</label>
+                    <input type="text" id="snackName" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">分类</label>
+                    <select id="snackCategoryId" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                        <option value="">请选择分类</option>
+                        ${categoryOptions}
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">价格</label>
+                    <input type="number" id="snackPrice" step="0.01" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">库存</label>
+                    <input type="number" id="snackStock" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">描述</label>
+                    <textarea id="snackDescription" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;"></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">图片</label>
+                    <input type="file" id="snackImageFile" accept="image/*" onchange="previewImage(this)" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                    <input type="hidden" id="snackImage" value="">
+                    <div id="imagePreview" style="margin-top: 10px; text-align: center;"></div>
+                </div>
+            `;
+
+            notification.modal('添加商品', modalContent, [
+                {
+                    text: '取消',
+                    className: 'btn-secondary',
+                    onClick: () => {
+                        currentSnackId = null;
+                    }
+                },
+                {
+                    text: '保存',
+                    className: 'btn-primary',
+                    onClick: () => {
+                        saveSnack();
+                    }
+                }
+            ]);
         }
 
         async function editSnack(id) {
@@ -207,32 +218,65 @@
                 const snack = response.snack;
                 
                 currentSnackId = id;
-                document.getElementById('modalTitle').textContent = '编辑商品';
-                document.getElementById('snackName').value = snack.name || '';
-                document.getElementById('snackCategoryId').value = snack.categoryId || '';
-                document.getElementById('snackPrice').value = snack.price || '';
-                document.getElementById('snackStock').value = snack.stock || '';
-                document.getElementById('snackDescription').value = snack.description || '';
-                document.getElementById('snackImage').value = snack.image || '';
                 
-                const preview = document.getElementById('imagePreview');
-                if (snack.image) {
-                    preview.innerHTML = `<img src="${snack.image}" style="max-width: 200px; max-height: 200px; border-radius: 4px;">`;
-                } else {
-                    preview.innerHTML = '';
-                }
+                const categoryOptions = categories.map(cat => 
+                    `<option value="${cat.id}" ${cat.id === snack.categoryId ? 'selected' : ''}>${cat.name}</option>`
+                ).join('');
                 
-                document.getElementById('snackModal').style.display = 'block';
+                const modalContent = `
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">商品名称</label>
+                        <input type="text" id="snackName" value="${snack.name || ''}" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">分类</label>
+                        <select id="snackCategoryId" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                            <option value="">请选择分类</option>
+                            ${categoryOptions}
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">价格</label>
+                        <input type="number" id="snackPrice" step="0.01" value="${snack.price || ''}" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">库存</label>
+                        <input type="number" id="snackStock" value="${snack.stock || ''}" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">描述</label>
+                        <textarea id="snackDescription" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">${snack.description || ''}</textarea>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">图片</label>
+                        <input type="file" id="snackImageFile" accept="image/*" onchange="previewImage(this)" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                        <input type="hidden" id="snackImage" value="${snack.image || ''}">
+                        <div id="imagePreview" style="margin-top: 10px; text-align: center;">
+                            ${snack.image ? `<img src="${snack.image}" style="max-width: 200px; max-height: 200px; border-radius: 4px;">` : ''}
+                        </div>
+                    </div>
+                `;
+
+                notification.modal('编辑商品', modalContent, [
+                    {
+                        text: '取消',
+                        className: 'btn-secondary',
+                        onClick: () => {
+                            currentSnackId = null;
+                        }
+                    },
+                    {
+                        text: '保存',
+                        className: 'btn-primary',
+                        onClick: () => {
+                            saveSnack();
+                        }
+                    }
+                ]);
             } catch (error) {
                 console.error('加载商品信息失败:', error);
-                alert('加载失败，请稍后重试');
+                notification.error('加载失败，请稍后重试');
             }
-        }
-
-        function hideModal() {
-            document.getElementById('snackModal').style.display = 'none';
-            document.getElementById('imagePreview').innerHTML = '';
-            document.getElementById('snackImageFile').value = '';
         }
 
         async function saveSnack() {
@@ -246,7 +290,7 @@
             };
             
             if (!snackData.name || !snackData.categoryId || !snackData.price || !snackData.stock) {
-                alert('请填写完整的商品信息');
+                notification.warning('请填写完整的商品信息');
                 return;
             }
             
@@ -260,35 +304,33 @@
                 }
                 
                 if (response.success) {
-                    alert('保存成功');
-                    hideModal();
+                    notification.success('保存成功');
+                    currentSnackId = null;
                     loadSnacks();
                 } else {
-                    alert(response.message || '保存失败');
+                    notification.error(response.message || '保存失败');
                 }
             } catch (error) {
                 console.error('保存失败:', error);
-                alert('保存失败，请稍后重试');
+                notification.error('保存失败，请稍后重试');
             }
         }
 
         async function deleteSnack(id) {
-            if (!confirm('确定要删除这个商品吗？')) {
-                return;
-            }
-            
-            try {
-                const response = await api.admin.snack.delete(id);
-                if (response.success) {
-                    alert('删除成功');
-                    loadSnacks();
-                } else {
-                    alert(response.message || '删除失败');
+            notification.confirm('确定要删除这个商品吗？', async () => {
+                try {
+                    const response = await api.admin.snack.delete(id);
+                    if (response.success) {
+                        notification.success('删除成功');
+                        loadSnacks();
+                    } else {
+                        notification.error(response.message || '删除失败');
+                    }
+                } catch (error) {
+                    console.error('删除失败:', error);
+                    notification.error('删除失败，请稍后重试');
                 }
-            } catch (error) {
-                console.error('删除失败:', error);
-                alert('删除失败，请稍后重试');
-            }
+            });
         }
 
         function previewImage(input) {
@@ -309,16 +351,16 @@
                     .then(data => {
                         if (data.success) {
                             hiddenInput.value = data.imageUrl;
-                            alert('图片上传成功');
+                            notification.success('图片上传成功');
                         } else {
-                            alert('图片上传失败: ' + data.message);
+                            notification.error('图片上传失败: ' + data.message);
                             preview.innerHTML = '';
                             input.value = '';
                         }
                     })
                     .catch(error => {
                         console.error('上传失败:', error);
-                        alert('图片上传失败');
+                        notification.error('图片上传失败');
                         preview.innerHTML = '';
                         input.value = '';
                     });

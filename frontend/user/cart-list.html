@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>购物车 - 零食商店</title>
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/notification.css">
 </head>
 <body>
     <div class="header">
@@ -54,25 +55,8 @@
         </div>
     </div>
 
-    <div id="orderModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
-        <div style="position: relative; top: 50%; transform: translateY(-50%); max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px;">
-            <h3>填写订单信息</h3>
-            <div class="form-group" style="margin-top: 20px;">
-                <label>收货地址</label>
-                <input type="text" id="orderAddress" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-            </div>
-            <div class="form-group">
-                <label>联系电话</label>
-                <input type="text" id="orderPhone" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-            </div>
-            <div style="margin-top: 20px; text-align: right;">
-                <button onclick="hideOrderForm()" class="btn btn-danger">取消</button>
-                <button onclick="createOrder()" class="btn btn-primary">确认下单</button>
-            </div>
-        </div>
-    </div>
-
     <script src="../js/api.js"></script>
+    <script src="../js/notification.js"></script>
     <script>
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user) {
@@ -89,6 +73,7 @@
         });
 
         let cartItems = [];
+        let currentOrderModal = null;
 
         async function loadCart() {
             try {
@@ -123,77 +108,103 @@
                 document.getElementById('totalPrice').textContent = '¥' + total.toFixed(2);
             } catch (error) {
                 console.error('加载购物车失败:', error);
-                alert('加载失败，请稍后重试');
+                notification.error('加载失败，请稍后重试');
             }
         }
 
         async function deleteCartItem(id) {
-            if (!confirm('确定要删除这个商品吗？')) {
-                return;
-            }
-            
-            try {
-                const response = await api.user.cart.delete(id);
-                if (response.success) {
-                    loadCart();
-                } else {
-                    alert(response.message || '删除失败');
+            notification.confirm('确定要删除这个商品吗？', async () => {
+                try {
+                    const response = await api.user.cart.delete(id);
+                    if (response.success) {
+                        loadCart();
+                    } else {
+                        notification.error(response.message || '删除失败');
+                    }
+                } catch (error) {
+                    console.error('删除失败:', error);
+                    notification.error('删除失败，请稍后重试');
                 }
-            } catch (error) {
-                console.error('删除失败:', error);
-                alert('删除失败，请稍后重试');
-            }
+            });
         }
 
         async function clearCart() {
-            if (!confirm('确定要清空购物车吗？')) {
-                return;
-            }
-            
-            try {
-                const response = await api.user.cart.clear();
-                if (response.success) {
-                    loadCart();
-                } else {
-                    alert(response.message || '清空失败');
+            notification.confirm('确定要清空购物车吗？', async () => {
+                try {
+                    const response = await api.user.cart.clear();
+                    if (response.success) {
+                        loadCart();
+                    } else {
+                        notification.error(response.message || '清空失败');
+                    }
+                } catch (error) {
+                    console.error('清空失败:', error);
+                    notification.error('清空失败，请稍后重试');
                 }
-            } catch (error) {
-                console.error('清空失败:', error);
-                alert('清空失败，请稍后重试');
-            }
+            });
         }
 
         function showOrderForm() {
-            document.getElementById('orderModal').style.display = 'block';
-            document.getElementById('orderAddress').value = user.address || '';
-            document.getElementById('orderPhone').value = user.phone || '';
+            const modalContent = `
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">收货地址</label>
+                    <input type="text" id="orderAddress" value="${user.address || ''}" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                </div>
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">联系电话</label>
+                    <input type="text" id="orderPhone" value="${user.phone || ''}" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                </div>
+            `;
+
+            currentOrderModal = notification.modal('填写订单信息', modalContent, [
+                {
+                    text: '取消',
+                    className: 'btn-secondary',
+                    onClick: () => {
+                        currentOrderModal.classList.remove('show');
+                        setTimeout(() => {
+                            currentOrderModal.remove();
+                            currentOrderModal = null;
+                        }, 300);
+                    }
+                },
+                {
+                    text: '确认下单',
+                    className: 'btn-primary',
+                    onClick: () => {
+                        const address = document.getElementById('orderAddress').value;
+                        const phone = document.getElementById('orderPhone').value;
+                        
+                        if (!address || !phone) {
+                            notification.warning('请填写完整的订单信息');
+                            return;
+                        }
+                        
+                        createOrder(address, phone);
+                    }
+                }
+            ]);
         }
 
-        function hideOrderForm() {
-            document.getElementById('orderModal').style.display = 'none';
-        }
-
-        async function createOrder() {
-            const address = document.getElementById('orderAddress').value;
-            const phone = document.getElementById('orderPhone').value;
-            
-            if (!address || !phone) {
-                alert('请填写完整的订单信息');
-                return;
-            }
-            
+        async function createOrder(address, phone) {
             try {
                 const response = await api.user.order.create({ address, phone });
                 if (response.success) {
-                    alert('订单创建成功！');
-                    hideOrderForm();
+                    notification.success('订单创建成功！');
+                    if (currentOrderModal) {
+                        currentOrderModal.classList.remove('show');
+                        setTimeout(() => {
+                            currentOrderModal.remove();
+                            currentOrderModal = null;
+                        }, 300);
+                    }
                     window.location.href = 'order-list.html';
                 } else {
-                    alert(response.message || '订单创建失败');
+                    notification.error(response.message || '订单创建失败');
                 }
             } catch (error) {
                 console.error('订单创建失败:', error);
-                alert('订单创建失败，请稍后重试');
+                notification.error('订单创建失败，请稍后重试');
             }
         }
 

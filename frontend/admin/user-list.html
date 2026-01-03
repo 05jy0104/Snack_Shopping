@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>用户管理 - 零食商店管理后台</title>
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/notification.css">
     <style>
         .user-type-badge {
             display: inline-block;
@@ -213,6 +214,7 @@
     </div>
 
     <script src="../js/api.js"></script>
+    <script src="../js/notification.js"></script>
     <script>
         const admin = JSON.parse(localStorage.getItem('admin'));
         if (!admin) {
@@ -265,22 +267,20 @@
         }
 
         async function deleteUser(id) {
-            if (!confirm('确定要删除这个用户吗？')) {
-                return;
-            }
-            
-            try {
-                const response = await api.admin.user.delete(id);
-                if (response.success) {
-                    alert('删除成功');
-                    loadUsers();
-                } else {
-                    alert(response.message || '删除失败');
+            notification.confirm('确定要删除这个用户吗？', async () => {
+                try {
+                    const response = await api.admin.user.delete(id);
+                    if (response.success) {
+                        notification.success('删除成功');
+                        loadUsers();
+                    } else {
+                        notification.error(response.message || '删除失败');
+                    }
+                } catch (error) {
+                    console.error('删除失败:', error);
+                    notification.error('删除失败，请稍后重试');
                 }
-            } catch (error) {
-                console.error('删除失败:', error);
-                alert('删除失败，请稍后重试');
-            }
+            });
         }
 
         async function viewUser(id) {
@@ -313,7 +313,7 @@
                 document.getElementById('viewUserModal').style.display = 'block';
             } catch (error) {
                 console.error('加载用户详情失败:', error);
-                alert('加载失败，请稍后重试');
+                notification.error('加载失败，请稍后重试');
             }
         }
 
@@ -335,7 +335,7 @@
                 document.getElementById('editUserModal').style.display = 'block';
             } catch (error) {
                 console.error('加载用户信息失败:', error);
-                alert('加载失败，请稍后重试');
+                notification.error('加载失败，请稍后重试');
             }
         }
 
@@ -357,15 +357,15 @@
             try {
                 const response = await api.admin.user.edit(data);
                 if (response.success) {
-                    alert('更新成功');
+                    notification.success('更新成功');
                     closeEditUserModal();
                     loadUsers();
                 } else {
-                    alert(response.message || '更新失败');
+                    notification.error(response.message || '更新失败');
                 }
             } catch (error) {
                 console.error('更新失败:', error);
-                alert('更新失败，请稍后重试');
+                notification.error('更新失败，请稍后重试');
             }
         });
 
@@ -382,7 +382,7 @@
                 document.getElementById('resetPasswordModal').style.display = 'block';
             } catch (error) {
                 console.error('加载用户信息失败:', error);
-                alert('加载失败，请稍后重试');
+                notification.error('加载失败，请稍后重试');
             }
         }
 
@@ -398,7 +398,7 @@
             const confirmPassword = document.getElementById('confirmPassword').value;
             
             if (newPassword !== confirmPassword) {
-                alert('两次输入的密码不一致');
+                notification.warning('两次输入的密码不一致');
                 return;
             }
             
@@ -410,14 +410,14 @@
             try {
                 const response = await api.admin.user.resetPassword(data);
                 if (response.success) {
-                    alert('密码重置成功');
+                    notification.success('密码重置成功');
                     closeResetPasswordModal();
                 } else {
-                    alert(response.message || '重置失败');
+                    notification.error(response.message || '重置失败');
                 }
             } catch (error) {
                 console.error('重置失败:', error);
-                alert('重置失败，请稍后重试');
+                notification.error('重置失败，请稍后重试');
             }
         });
 
@@ -453,15 +453,15 @@
             try {
                 const response = await api.admin.user.add(data);
                 if (response.success) {
-                    alert('添加成功');
+                    notification.success('添加成功');
                     closeAddUserModal();
                     loadUsers();
                 } else {
-                    alert(response.message || '添加失败');
+                    notification.error(response.message || '添加失败');
                 }
             } catch (error) {
                 console.error('添加失败:', error);
-                alert('添加失败，请稍后重试');
+                notification.error('添加失败，请稍后重试');
             }
         });
 
@@ -477,15 +477,15 @@
             try {
                 const response = await api.admin.admin.add(data);
                 if (response.success) {
-                    alert('添加成功');
+                    notification.success('添加成功');
                     closeAddAdminModal();
                     loadUsers();
                 } else {
-                    alert(response.message || '添加失败');
+                    notification.error(response.message || '添加失败');
                 }
             } catch (error) {
                 console.error('添加失败:', error);
-                alert('添加失败，请稍后重试');
+                notification.error('添加失败，请稍后重试');
             }
         });
 

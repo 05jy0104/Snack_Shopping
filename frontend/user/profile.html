@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>个人中心 - 零食商店</title>
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/notification.css">
 </head>
 <body>
     <div class="header">
@@ -50,6 +51,7 @@
     </div>
 
     <script src="../js/api.js"></script>
+    <script src="../js/notification.js"></script>
     <script>
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user) {
@@ -78,15 +80,15 @@
             try {
                 const response = await api.user.updateProfile(userData);
                 if (response.success) {
-                    alert('修改成功');
+                    notification.success('修改成功');
                     localStorage.setItem('user', JSON.stringify(response.user));
                     document.getElementById('welcome').textContent = '欢迎, ' + (response.user.realName || response.user.username);
                 } else {
-                    alert(response.message || '修改失败');
+                    notification.error(response.message || '修改失败');
                 }
             } catch (error) {
                 console.error('修改失败:', error);
-                alert('修改失败，请稍后重试');
+                notification.error('修改失败，请稍后重试');
             }
         });
 
