@@ -89,26 +89,35 @@ public class OrderController {
     }
 
     @PostMapping("/create")
-    public Map<String, Object> create(@RequestBody Map<String, String> params, HttpSession session) {
+    public Map<String, Object> create(@RequestBody Map<String, Object> params, HttpSession session) {
         Map<String, Object> result = new HashMap<>();
-        Integer userId = params.get("userId") != null ? Integer.parseInt(params.get("userId")) : (Integer) session.getAttribute("userId");
+        Integer userId = params.get("userId") != null ? Integer.parseInt(params.get("userId").toString()) : (Integer) session.getAttribute("userId");
         if (userId == null) {
             result.put("success", false);
             result.put("message", "未登录");
             return result;
         }
 
-        String address = params.get("address");
-        String phone = params.get("phone");
+        String address = (String) params.get("address");
+        String phone = (String) params.get("phone");
+        Object cartItemIdsObj = params.get("cartItemIds");
 
-        Order order = orderService.createOrder(userId, address, phone);
+        Order order;
+        if (cartItemIdsObj != null && cartItemIdsObj instanceof List) {
+            @SuppressWarnings("unchecked")
+            List<Integer> cartItemIds = (List<Integer>) cartItemIdsObj;
+            order = orderService.createOrderWithCartItems(userId, address, phone, cartItemIds);
+        } else {
+            order = orderService.createOrder(userId, address, phone);
+        }
+
         if (order != null) {
             result.put("success", true);
             result.put("message", "订单创建成功");
             result.put("order", order);
         } else {
             result.put("success", false);
-            result.put("message", "购物车为空");
+            result.put("message", "购物车为空或未选择商品");
         }
         return result;
     }

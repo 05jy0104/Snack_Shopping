@@ -27,6 +27,7 @@ com\snack\entity\News.class
 com\snack\service\CartService.class
 com\snack\service\impl\CustomerServiceServiceImpl.class
 com\snack\service\impl\BannerServiceImpl.class
+com\snack\config\WebConfig.class
 com\snack\entity\User.class
 com\snack\controller\AdminUserController.class
 com\snack\entity\Comment.class

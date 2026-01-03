@@ -22,6 +22,9 @@ public class CartController {
     @Autowired
     private SnackService snackService;
 
+    @Autowired
+    private com.snack.mapper.CartMapper cartMapper;
+
     @PostMapping("/add")
     public Map<String, Object> add(@RequestBody Map<String, Object> params, HttpSession session) {
         Map<String, Object> result = new HashMap<>();
@@ -132,6 +135,66 @@ public class CartController {
         cartService.clear(userId);
         result.put("success", true);
         result.put("message", "清空成功");
+        return result;
+    }
+
+    @PostMapping("/update")
+    public Map<String, Object> update(@RequestBody Map<String, Object> params) {
+        Map<String, Object> result = new HashMap<>();
+        
+        Object idObj = params.get("id");
+        if (idObj == null) {
+            result.put("success", false);
+            result.put("message", "购物车ID不能为空");
+            return result;
+        }
+        
+        Integer id = null;
+        if (idObj instanceof Integer) {
+            id = (Integer) idObj;
+        } else if (idObj instanceof String) {
+            try {
+                id = Integer.parseInt((String) idObj);
+            } catch (NumberFormatException e) {
+                result.put("success", false);
+                result.put("message", "购物车ID格式错误");
+                return result;
+            }
+        }
+        
+        Object quantityObj = params.get("quantity");
+        Integer quantity = null;
+        if (quantityObj != null) {
+            if (quantityObj instanceof Integer) {
+                quantity = (Integer) quantityObj;
+            } else if (quantityObj instanceof String) {
+                try {
+                    quantity = Integer.parseInt((String) quantityObj);
+                } catch (NumberFormatException e) {
+                    result.put("success", false);
+                    result.put("message", "数量格式错误");
+                    return result;
+                }
+            }
+        }
+        
+        if (quantity == null || quantity < 1) {
+            result.put("success", false);
+            result.put("message", "数量必须大于0");
+            return result;
+        }
+        
+        Cart cart = cartMapper.findById(id);
+        if (cart == null) {
+            result.put("success", false);
+            result.put("message", "购物车项不存在");
+            return result;
+        }
+        
+        cart.setQuantity(quantity);
+        cartService.update(cart);
+        result.put("success", true);
+        result.put("message", "更新成功");
         return result;
     }
 }

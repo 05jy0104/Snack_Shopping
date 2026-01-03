@@ -20,6 +20,10 @@
         SELECT * FROM cart WHERE user_id = #{userId} AND snack_id = #{snackId}
     </select>
 
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT * FROM cart WHERE id = #{id}
+    </select>
+
     <insert id="insert" parameterType="com.snack.entity.Cart" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO cart (user_id, snack_id, snack_name, price, image, quantity, create_time)
         VALUES (#{userId}, #{snackId}, #{snackName}, #{price}, #{image}, #{quantity}, #{createTime})

@@ -28,6 +28,7 @@
                 <table id="cartTable">
                     <thead>
                         <tr>
+                            <th style="width: 50px;"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
                             <th>商品名称</th>
                             <th>价格</th>
                             <th>数量</th>
@@ -93,12 +94,22 @@
                     const subtotal = item.price * item.quantity;
                     total += subtotal;
                     return `
-                        <tr>
+                        <tr data-id="${item.id}">
+                            <td><input type="checkbox" class="item-checkbox" data-id="${item.id}" onchange="updateTotal()"></td>
                             <td>${item.snackName}</td>
                             <td>¥${item.price.toFixed(2)}</td>
-                            <td>${item.quantity}</td>
-                            <td>¥${subtotal.toFixed(2)}</td>
                             <td>
+                                <div style="display: flex; align-items: center; gap: 5px;">
+                                    <button onclick="changeQuantity(${item.id}, -1)" class="btn btn-sm" style="padding: 2px 8px;">-</button>
+                                    <input type="number" id="quantity-${item.id}" value="${item.quantity}" min="1" 
+                                        style="width: 50px; padding: 5px; text-align: center; border: 1px solid #ddd; border-radius: 4px;"
+                                        onchange="updateQuantity(${item.id}, this.value)">
+                                    <button onclick="changeQuantity(${item.id}, 1)" class="btn btn-sm" style="padding: 2px 8px;">+</button>
+                                </div>
+                            </td>
+                            <td class="subtotal">¥${subtotal.toFixed(2)}</td>
+                            <td>
+                                <button onclick="viewDetail(${item.snackId})" class="btn btn-sm" style="padding: 5px 10px; margin-right: 5px;">详情</button>
                                 <button onclick="deleteCartItem(${item.id})" class="btn btn-danger">删除</button>
                             </td>
                         </tr>
@@ -128,6 +139,72 @@
             });
         }
 
+        async function changeQuantity(id, delta) {
+            const item = cartItems.find(item => item.id === id);
+            if (!item) return;
+            
+            const newQuantity = item.quantity + delta;
+            if (newQuantity < 1) {
+                notification.warning('商品数量不能小于1');
+                return;
+            }
+            
+            await updateQuantity(id, newQuantity);
+        }
+
+        async function updateQuantity(id, quantity) {
+            const newQuantity = parseInt(quantity);
+            if (isNaN(newQuantity) || newQuantity < 1) {
+                notification.warning('请输入有效的数量');
+                loadCart();
+                return;
+            }
+            
+            try {
+                const response = await api.user.cart.update(id, newQuantity);
+                if (response.success) {
+                    loadCart();
+                } else {
+                    notification.error(response.message || '更新数量失败');
+                    loadCart();
+                }
+            } catch (error) {
+                console.error('更新数量失败:', error);
+                notification.error('更新数量失败，请稍后重试');
+                loadCart();
+            }
+        }
+
+        function updateTotal() {
+            const checkboxes = document.querySelectorAll('.item-checkbox:checked');
+            let total = 0;
+            
+            checkboxes.forEach(checkbox => {
+                const id = parseInt(checkbox.dataset.id);
+                const item = cartItems.find(item => item.id === id);
+                if (item) {
+                    total += item.price * item.quantity;
+                }
+            });
+            
+            document.getElementById('totalPrice').textContent = '¥' + total.toFixed(2);
+        }
+
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.item-checkbox');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+            });
+            
+            updateTotal();
+        }
+
+        function viewDetail(snackId) {
+            window.location.href = `snack-detail.html?id=${snackId}`;
+        }
+
         async function clearCart() {
             notification.confirm('确定要清空购物车吗？', async () => {
                 try {
@@ -145,7 +222,30 @@
         }
 
         function showOrderForm() {
+            const checkboxes = document.querySelectorAll('.item-checkbox:checked');
+            if (checkboxes.length === 0) {
+                notification.warning('请至少选择一个商品进行结算');
+                return;
+            }
+            
+            const selectedItems = [];
+            checkboxes.forEach(checkbox => {
+                const id = parseInt(checkbox.dataset.id);
+                const item = cartItems.find(item => item.id === id);
+                if (item) {
+                    selectedItems.push(item);
+                }
+            });
+            
             const modalContent = `
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px;">已选商品:</h4>
+                    <ul style="max-height: 200px; overflow-y: auto; padding-left: 20px;">
+                        ${selectedItems.map(item => `
+                            <li>${item.snackName} x ${item.quantity} - ¥${(item.price * item.quantity).toFixed(2)}</li>
+                        `).join('')}
+                    </ul>
+                </div>
                 <div class="form-group" style="margin-bottom: 15px;">
                     <label style="display: block; margin-bottom: 8px; font-weight: 500;">收货地址</label>
                     <input type="text" id="orderAddress" value="${user.address || ''}" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
@@ -180,15 +280,15 @@
                             return;
                         }
                         
-                        createOrder(address, phone);
+                        createOrder(address, phone, selectedItems.map(item => item.id));
                     }
                 }
             ]);
         }
 
-        async function createOrder(address, phone) {
+        async function createOrder(address, phone, cartItemIds) {
             try {
-                const response = await api.user.order.create({ address, phone });
+                const response = await api.user.order.create({ address, phone, cartItemIds });
                 if (response.success) {
                     notification.success('订单创建成功！');
                     if (currentOrderModal) {

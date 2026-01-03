@@ -79,6 +79,10 @@ const api = {
                     method: 'GET'
                 });
             },
+            update: (id, quantity) => request('/user/cart/update', {
+                method: 'POST',
+                body: JSON.stringify({ id, quantity })
+            }),
             delete: (id) => request(`/user/cart/delete/${id}`, {
                 method: 'GET'
             }),
