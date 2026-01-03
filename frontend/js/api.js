@@ -201,6 +201,26 @@ const api = {
                 method: 'POST',
                 body: JSON.stringify(data)
             })
+        },
+        admin: {
+            list: () => request('/admin/admin/list', {
+                method: 'GET'
+            }),
+            add: (data) => request('/admin/admin/add', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            }),
+            edit: (id) => request(`/admin/admin/detail/${id}`, {
+                method: 'GET'
+            }),
+            update: (data) => request('/admin/admin/edit', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            }),
+            delete: (id) => request(`/admin/admin/delete`, {
+                method: 'POST',
+                body: JSON.stringify({ id })
+            })
         }
     }
 };

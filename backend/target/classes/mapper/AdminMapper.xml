@@ -29,4 +29,13 @@
         </set>
         WHERE id = #{id}
     </update>
+
+    <insert id="insert" parameterType="com.snack.entity.Admin" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO admin (username, password, real_name, create_time)
+        VALUES (#{username}, #{password}, #{realName}, #{createTime})
+    </insert>
+
+    <delete id="delete">
+        DELETE FROM admin WHERE id = #{id}
+    </delete>
 </mapper>

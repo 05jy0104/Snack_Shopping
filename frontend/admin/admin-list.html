@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>管理员管理 - 零食商店管理后台</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="header admin-header">
+        <h1>零食商店管理后台</h1>
+        <div class="nav">
+            <a href="index.html">首页</a>
+            <a href="user-list.html">用户管理</a>
+            <a href="category-list.html">分类管理</a>
+            <a href="snack-list.html">商品管理</a>
+            <a href="order-list.html">订单管理</a>
+            <a href="admin-list.html">管理员管理</a>
+            <a href="#" id="logout">退出</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="content">
+            <h2>管理员管理</h2>
+            
+            <div style="margin-bottom: 20px;">
+                <button onclick="showAddModal()" class="btn btn-primary">添加管理员</button>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>用户名</th>
+                        <th>真实姓名</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="adminList"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="adminModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+        <div style="position: relative; top: 50%; transform: translateY(-50%); max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px;">
+            <h3 id="modalTitle">添加管理员</h3>
+            <div class="form-group" style="margin-top: 20px;">
+                <label>用户名</label>
+                <input type="text" id="adminUsername" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div class="form-group" style="margin-top: 20px;">
+                <label>密码</label>
+                <input type="password" id="adminPassword" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div class="form-group" style="margin-top: 20px;">
+                <label>真实姓名</label>
+                <input type="text" id="adminRealName" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div style="margin-top: 20px; text-align: right;">
+                <button onclick="hideModal()" class="btn btn-danger">取消</button>
+                <button onclick="saveAdmin()" class="btn btn-primary">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        const admin = JSON.parse(localStorage.getItem('admin'));
+        if (!admin) {
+            window.location.href = 'login.html';
+        }
+
+        document.getElementById('logout').addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('admin');
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        });
+
+        let currentAdminId = null;
+
+        async function loadAdmins() {
+            try {
+                const response = await api.admin.admin.list();
+                const admins = response.admins || [];
+                const tbody = document.getElementById('adminList');
+                
+                if (admins.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">暂无管理员</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = admins.map(admin => `
+                    <tr>
+                        <td>${admin.id}</td>
+                        <td>${admin.username}</td>
+                        <td>${admin.realName || '-'}</td>
+                        <td>${admin.createTime ? new Date(admin.createTime).toLocaleString('zh-CN') : '-'}</td>
+                        <td>
+                            <button onclick="editAdmin(${admin.id})" class="btn btn-primary">编辑</button>
+                            <button onclick="deleteAdmin(${admin.id})" class="btn btn-danger">删除</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('加载管理员失败:', error);
+                document.getElementById('adminList').innerHTML = '<tr><td colspan="5" style="text-align: center;">加载失败，请稍后重试</td></tr>';
+            }
+        }
+
+        function showAddModal() {
+            currentAdminId = null;
+            document.getElementById('modalTitle').textContent = '添加管理员';
+            document.getElementById('adminUsername').value = '';
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('adminRealName').value = '';
+            document.getElementById('adminModal').style.display = 'block';
+        }
+
+        async function editAdmin(id) {
+            try {
+                const response = await fetch(`http://localhost:8080/api/admin/admin/detail/${id}`);
+                const data = await response.json();
+                
+                if (data.success && data.admin) {
+                    currentAdminId = id;
+                    document.getElementById('modalTitle').textContent = '编辑管理员';
+                    document.getElementById('adminUsername').value = data.admin.username;
+                    document.getElementById('adminUsername').disabled = true;
+                    document.getElementById('adminPassword').value = '';
+                    document.getElementById('adminRealName').value = data.admin.realName || '';
+                    document.getElementById('adminModal').style.display = 'block';
+                } else {
+                    alert('加载失败，请稍后重试');
+                }
+            } catch (error) {
+                console.error('加载管理员信息失败:', error);
+                alert('加载失败，请稍后重试');
+            }
+        }
+
+        function hideModal() {
+            document.getElementById('adminModal').style.display = 'none';
+            document.getElementById('adminUsername').disabled = false;
+        }
+
+        async function saveAdmin() {
+            const username = document.getElementById('adminUsername').value;
+            const password = document.getElementById('adminPassword').value;
+            const realName = document.getElementById('adminRealName').value;
+            
+            if (!username) {
+                alert('请输入用户名');
+                return;
+            }
+            
+            if (!currentAdminId && !password) {
+                alert('请输入密码');
+                return;
+            }
+            
+            try {
+                let response;
+                if (currentAdminId) {
+                    response = await api.admin.admin.update({ id: currentAdminId, realName });
+                } else {
+                    response = await api.admin.admin.add({ username, password, realName });
+                }
+                
+                if (response.success) {
+                    alert('保存成功');
+                    hideModal();
+                    loadAdmins();
+                } else {
+                    alert(response.message || '保存失败');
+                }
+            } catch (error) {
+                console.error('保存失败:', error);
+                alert('保存失败，请稍后重试');
+            }
+        }
+
+        async function deleteAdmin(id) {
+            if (!confirm('确定要删除这个管理员吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await api.admin.admin.delete(id);
+                if (response.success) {
+                    alert('删除成功');
+                    loadAdmins();
+                } else {
+                    alert(response.message || '删除失败');
+                }
+            } catch (error) {
+                console.error('删除失败:', error);
+                alert('删除失败，请稍后重试');
+            }
+        }
+
+        loadAdmins();
+    </script>
+</body>
+</html>

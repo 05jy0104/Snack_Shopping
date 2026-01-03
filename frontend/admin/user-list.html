@@ -82,7 +82,10 @@
         <div class="content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h2>用户管理</h2>
-                <button onclick="showAddUserModal()" class="btn btn-primary">新增用户</button>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="showAddUserModal()" class="btn btn-primary">新增用户</button>
+                    <button onclick="showAddAdminModal()" class="btn btn-primary">添加管理员</button>
+                </div>
             </div>
             
             <table>
@@ -183,6 +186,28 @@
                     <input type="password" id="confirmPassword" required>
                 </div>
                 <button type="submit" class="btn btn-primary">重置</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="addAdminModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddAdminModal()">&times;</span>
+            <h3>添加管理员</h3>
+            <form id="addAdminForm">
+                <div class="form-group">
+                    <label>用户名：</label>
+                    <input type="text" id="adminUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>密码：</label>
+                    <input type="password" id="adminPassword" required>
+                </div>
+                <div class="form-group">
+                    <label>真实姓名：</label>
+                    <input type="text" id="adminRealName">
+                </div>
+                <button type="submit" class="btn btn-primary">提交</button>
             </form>
         </div>
     </div>
@@ -405,6 +430,15 @@
             document.getElementById('addUserForm').reset();
         }
 
+        function showAddAdminModal() {
+            document.getElementById('addAdminModal').style.display = 'block';
+        }
+
+        function closeAddAdminModal() {
+            document.getElementById('addAdminModal').style.display = 'none';
+            document.getElementById('addAdminForm').reset();
+        }
+
         document.getElementById('addUserForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -421,6 +455,30 @@
                 if (response.success) {
                     alert('添加成功');
                     closeAddUserModal();
+                    loadUsers();
+                } else {
+                    alert(response.message || '添加失败');
+                }
+            } catch (error) {
+                console.error('添加失败:', error);
+                alert('添加失败，请稍后重试');
+            }
+        });
+
+        document.getElementById('addAdminForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const data = {
+                username: document.getElementById('adminUsername').value,
+                password: document.getElementById('adminPassword').value,
+                realName: document.getElementById('adminRealName').value
+            };
+            
+            try {
+                const response = await api.admin.admin.add(data);
+                if (response.success) {
+                    alert('添加成功');
+                    closeAddAdminModal();
                     loadUsers();
                 } else {
                     alert(response.message || '添加失败');

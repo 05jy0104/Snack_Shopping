@@ -10,5 +10,7 @@ public interface AdminMapper {
     Admin findByUsername(String username);
     Admin findById(Integer id);
     List<Admin> findAll();
+    void insert(Admin admin);
     void update(Admin admin);
+    void delete(Integer id);
 }
