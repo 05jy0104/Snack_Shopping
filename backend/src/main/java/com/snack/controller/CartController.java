@@ -39,14 +39,41 @@ public class CartController {
             return result;
         }
 
-        Integer snackId = (Integer) params.get("snackId");
+        Object snackIdObj = params.get("snackId");
+        Integer snackId = null;
+        if (snackIdObj != null) {
+            if (snackIdObj instanceof Integer) {
+                snackId = (Integer) snackIdObj;
+            } else if (snackIdObj instanceof String) {
+                try {
+                    snackId = Integer.parseInt((String) snackIdObj);
+                } catch (NumberFormatException e) {
+                    result.put("success", false);
+                    result.put("message", "商品ID格式错误");
+                    return result;
+                }
+            }
+        }
+        
         if (snackId == null) {
             result.put("success", false);
             result.put("message", "商品ID不能为空");
             return result;
         }
 
-        Integer quantity = params.get("quantity") != null ? (Integer) params.get("quantity") : 1;
+        Object quantityObj = params.get("quantity");
+        Integer quantity = 1;
+        if (quantityObj != null) {
+            if (quantityObj instanceof Integer) {
+                quantity = (Integer) quantityObj;
+            } else if (quantityObj instanceof String) {
+                try {
+                    quantity = Integer.parseInt((String) quantityObj);
+                } catch (NumberFormatException e) {
+                    quantity = 1;
+                }
+            }
+        }
 
         Snack snack = snackService.findById(snackId);
         if (snack == null) {

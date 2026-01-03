@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>商品详情 - 零食商店</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/notification.css">
+    <style>
+        .detail-container {
+            display: flex;
+            gap: 40px;
+            margin-top: 30px;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .detail-image {
+            flex: 0 0 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f5f5;
+            border-radius: 8px;
+            overflow: hidden;
+            min-height: 400px;
+        }
+
+        .detail-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .detail-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .detail-category {
+            font-size: 16px;
+            color: #999;
+            margin-bottom: 20px;
+        }
+
+        .detail-price {
+            font-size: 36px;
+            font-weight: bold;
+            color: #ff69b4;
+            margin-bottom: 20px;
+        }
+
+        .detail-stock {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .detail-description {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .detail-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: auto;
+        }
+
+        .detail-actions .btn {
+            flex: 1;
+            padding: 15px 30px;
+            font-size: 16px;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background-color: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .back-button:hover {
+            background-color: #5568d3;
+        }
+
+        @media (max-width: 768px) {
+            .detail-container {
+                flex-direction: column;
+                padding: 20px;
+            }
+
+            .detail-image {
+                flex: none;
+                width: 100%;
+                min-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>零食商店</h1>
+        <div class="nav">
+            <span id="welcome"></span>
+            <a href="index.html">首页</a>
+            <a href="snack-list.html">商品列表</a>
+            <a href="cart-list.html">购物车</a>
+            <a href="order-list.html">我的订单</a>
+            <a href="profile.html">个人中心</a>
+            <a href="#" id="logout">退出</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <a href="snack-list.html" class="back-button">← 返回商品列表</a>
+        
+        <div class="detail-container">
+            <div class="detail-image" id="detailImage">
+                <div style="color: #999;">加载中...</div>
+            </div>
+            
+            <div class="detail-info">
+                <h1 class="detail-name" id="detailName">加载中...</h1>
+                <p class="detail-category" id="detailCategory">-</p>
+                <p class="detail-price" id="detailPrice">-</p>
+                <p class="detail-stock" id="detailStock">-</p>
+                <div class="detail-description" id="detailDescription">-</div>
+                
+                <div class="detail-actions">
+                    <button onclick="addToCart()" class="btn btn-primary">加入购物车</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/notification.js"></script>
+    <script>
+        let snackId = null;
+        let snackData = null;
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            window.location.href = 'login.html';
+        } else {
+            document.getElementById('welcome').textContent = '欢迎, ' + (user.realName || user.username);
+        }
+
+        document.getElementById('logout').addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        });
+
+        function getSnackIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id');
+        }
+
+        async function loadSnackDetail() {
+            snackId = getSnackIdFromUrl();
+            
+            if (!snackId) {
+                notification.error('商品ID不存在');
+                setTimeout(() => {
+                    window.location.href = 'snack-list.html';
+                }, 2000);
+                return;
+            }
+
+            try {
+                const response = await api.user.snack.detail(snackId);
+                snackData = response.snack;
+                
+                if (!snackData) {
+                    notification.error('商品不存在');
+                    setTimeout(() => {
+                        window.location.href = 'snack-list.html';
+                    }, 2000);
+                    return;
+                }
+
+                document.getElementById('detailName').textContent = snackData.name || '未命名';
+                document.getElementById('detailCategory').textContent = `分类: ${snackData.categoryName || '未分类'}`;
+                document.getElementById('detailPrice').textContent = `¥${snackData.price ? snackData.price.toFixed(2) : '0.00'}`;
+                document.getElementById('detailStock').textContent = `库存: ${snackData.stock || 0}`;
+                document.getElementById('detailDescription').textContent = snackData.description || '暂无描述';
+                
+                const imageContainer = document.getElementById('detailImage');
+                if (snackData.image) {
+                    imageContainer.innerHTML = `<img src="${snackData.image}" alt="${snackData.name}" onerror="this.parentElement.innerHTML='<div style=\'color:#999;\'>暂无图片</div>'">`;
+                } else {
+                    imageContainer.innerHTML = '<div style="color: #999;">暂无图片</div>';
+                }
+            } catch (error) {
+                console.error('加载商品详情失败:', error);
+                notification.error('加载失败，请稍后重试');
+                setTimeout(() => {
+                    window.location.href = 'snack-list.html';
+                }, 2000);
+            }
+        }
+
+        async function addToCart() {
+            if (!snackData) {
+                notification.error('商品信息加载失败');
+                return;
+            }
+
+            if (snackData.stock <= 0) {
+                notification.error('该商品已售罄');
+                return;
+            }
+
+            try {
+                const response = await api.user.cart.add({ snackId, quantity: 1 });
+                
+                if (response.success) {
+                    notification.success('已加入购物车');
+                } else {
+                    notification.error(response.message || '添加失败');
+                }
+            } catch (error) {
+                console.error('添加到购物车失败:', error);
+                notification.error('添加失败，请稍后重试');
+            }
+        }
+
+        loadSnackDetail();
+    </script>
+</body>
+</html>

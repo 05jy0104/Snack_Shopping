@@ -61,18 +61,10 @@
                 const response = await api.admin.category.list();
                 categories = response.categories || [];
                 
-                const select = document.getElementById('snackCategoryId');
                 const filterSelect = document.getElementById('categoryFilter');
-                
-                select.innerHTML = '<option value="">请选择分类</option>';
                 filterSelect.innerHTML = '<option value="">全部商品</option>';
                 
                 categories.forEach(category => {
-                    const option = document.createElement('option');
-                    option.value = category.id;
-                    option.textContent = category.name;
-                    select.appendChild(option);
-                    
                     const filterOption = document.createElement('option');
                     filterOption.value = category.id;
                     filterOption.textContent = category.name;

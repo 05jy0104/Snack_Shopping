@@ -60,6 +60,8 @@ const api = {
                 console.log('=== API Cart Add Debug ===');
                 console.log('Original data:', data);
                 console.log('User:', user);
+                data.snackId = Number(data.snackId);
+                data.quantity = Number(data.quantity);
                 if (user && user.id) {
                     data.userId = user.id;
                 }

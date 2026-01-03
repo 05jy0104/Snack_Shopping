@@ -181,15 +181,18 @@
                 container.innerHTML = snacks.map(snack => `
                     <div class="snack-card">
                         ${snack.image 
-                            ? `<img src="${snack.image}" alt="${snack.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                            ? `<a href="snack-detail.html?id=${snack.id}"><img src="${snack.image}" alt="${snack.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"></a>
                             <div style="display:none;width:250px;height:200px;align-items:center;justify-content:center;background:#f5f5f5;color:#999;">暂无图片</div>`
                             : `<div style="width:250px;height:200px;display:flex;align-items:center;justify-content:center;background:#f5f5f5;color:#999;">暂无图片</div>`
                         }
                         <div class="info">
-                            <h3>${snack.name}</h3>
+                            <h3><a href="snack-detail.html?id=${snack.id}" style="color:#333;text-decoration:none;">${snack.name}</a></h3>
                             <p>${snack.description || '暂无描述'}</p>
                             <p class="price">¥${snack.price.toFixed(2)}</p>
-                            <button onclick="addToCart(${snack.id})" class="btn btn-primary">加入购物车</button>
+                            <div style="display:flex;gap:10px;">
+                                <a href="snack-detail.html?id=${snack.id}" class="btn btn-info" style="text-align:center;text-decoration:none;">查看详情</a>
+                                <button onclick="addToCart(${snack.id})" class="btn btn-primary">加入购物车</button>
+                            </div>
                         </div>
                     </div>
                 `).join('');
