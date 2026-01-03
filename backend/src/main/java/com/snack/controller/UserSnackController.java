@@ -23,21 +23,16 @@ public class UserSnackController {
 
     @GetMapping("/list")
     public Map<String, Object> list(@RequestParam(required = false) Integer categoryId, 
-                       @RequestParam(required = false) String keyword) {
+                       @RequestParam(required = false) String keyword,
+                       @RequestParam(required = false, defaultValue = "1") Integer page,
+                       @RequestParam(required = false, defaultValue = "9") Integer pageSize) {
         Map<String, Object> result = new HashMap<>();
         List<Category> categories = categoryService.findAll();
         result.put("categories", categories);
 
-        List<Snack> snacks;
-        if (categoryId != null) {
-            snacks = snackService.findByCategoryId(categoryId);
-        } else if (keyword != null && !keyword.isEmpty()) {
-            snacks = snackService.search(keyword);
-        } else {
-            snacks = snackService.findAll();
-        }
+        Map<String, Object> pageResult = snackService.findPage(page, pageSize, categoryId, keyword);
+        result.putAll(pageResult);
         result.put("success", true);
-        result.put("snacks", snacks);
         result.put("categoryId", categoryId);
         result.put("keyword", keyword);
         return result;

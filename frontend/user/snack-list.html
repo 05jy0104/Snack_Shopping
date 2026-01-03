@@ -119,6 +119,8 @@
             </div>
             
             <div id="snackList" class="snack-grid"></div>
+            
+            <div id="pagination" style="margin-top: 30px; text-align: center;"></div>
         </div>
     </div>
 
@@ -127,6 +129,9 @@
     <script>
         let currentCategoryId = null;
         let currentKeyword = '';
+        let currentPage = 1;
+        let pageSize = 9;
+        let totalPages = 1;
 
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user) {
@@ -161,7 +166,10 @@
 
         async function loadSnacks() {
             try {
-                const params = {};
+                const params = {
+                    page: currentPage,
+                    pageSize: pageSize
+                };
                 if (currentCategoryId) {
                     params.categoryId = currentCategoryId;
                 }
@@ -170,11 +178,14 @@
                 }
                 
                 const response = await api.user.snack.list(params);
-                const snacks = response.snacks;
+                const snacks = response.snacks || [];
                 const container = document.getElementById('snackList');
+                
+                totalPages = response.totalPages || 1;
                 
                 if (snacks.length === 0) {
                     container.innerHTML = '<p>暂无商品</p>';
+                    document.getElementById('pagination').style.display = 'none';
                     return;
                 }
                 
@@ -196,14 +207,18 @@
                         </div>
                     </div>
                 `).join('');
+                
+                renderPagination();
             } catch (error) {
                 console.error('加载商品失败:', error);
                 document.getElementById('snackList').innerHTML = '<p>加载失败，请稍后重试</p>';
+                document.getElementById('pagination').style.display = 'none';
             }
         }
 
         document.getElementById('categoryFilter').addEventListener('change', function() {
             currentCategoryId = this.value ? parseInt(this.value) : null;
+            currentPage = 1;
             loadSnacks();
         });
 
@@ -215,7 +230,49 @@
 
         function searchSnacks() {
             currentKeyword = document.getElementById('searchInput').value;
+            currentPage = 1;
             loadSnacks();
+        }
+
+        function renderPagination() {
+            const pagination = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                pagination.style.display = 'none';
+                return;
+            }
+            
+            pagination.style.display = 'block';
+            
+            let html = '<div style="display: inline-flex; gap: 8px; align-items: center;">';
+            
+            html += `<button onclick="goToPage(1)" class="btn btn-info" ${currentPage === 1 ? 'disabled' : ''}>首页</button>`;
+            html += `<button onclick="goToPage(${currentPage - 1})" class="btn btn-info" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>`;
+            
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    html += `<button onclick="goToPage(${i})" class="btn ${i === currentPage ? 'btn-primary' : 'btn-info'}">${i}</button>`;
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    html += '<span style="padding: 0 8px;">...</span>';
+                }
+            }
+            
+            html += `<button onclick="goToPage(${currentPage + 1})" class="btn btn-info" ${currentPage === totalPages ? 'disabled' : ''}>下一页</button>`;
+            html += `<button onclick="goToPage(${totalPages})" class="btn btn-info" ${currentPage === totalPages ? 'disabled' : ''}>末页</button>`;
+            
+            html += `<span style="margin-left: 15px; color: #666;">共 ${totalPages} 页</span>`;
+            html += '</div>';
+            
+            pagination.innerHTML = html;
+        }
+
+        function goToPage(page) {
+            if (page < 1 || page > totalPages || page === currentPage) {
+                return;
+            }
+            currentPage = page;
+            loadSnacks();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         async function addToCart(snackId) {

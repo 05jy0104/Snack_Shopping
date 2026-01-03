@@ -16,4 +16,6 @@ public interface SnackMapper {
     void update(Snack snack);
     void delete(Integer id);
     void updateStock(Integer id, Integer quantity);
+    List<Snack> findPage(Map<String, Object> params);
+    int countByCondition(Map<String, Object> params);
 }
