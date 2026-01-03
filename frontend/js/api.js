@@ -172,7 +172,21 @@ const api = {
             }),
             delete: (id) => request(`/admin/snack/delete/${id}`, {
                 method: 'GET'
-            })
+            }),
+            upload: (file) => {
+                const formData = new FormData();
+                formData.append('file', file);
+                const token = localStorage.getItem('token');
+                const headers = {};
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                return fetch(`${API_BASE_URL}/admin/snack/upload`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: formData
+                }).then(response => response.json());
+            }
         },
         user: {
             list: () => request('/admin/user/list', {

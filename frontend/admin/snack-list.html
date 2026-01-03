@@ -62,8 +62,10 @@
                 <textarea id="snackDescription" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
             </div>
             <div class="form-group">
-                <label>图片URL</label>
-                <input type="text" id="snackImage" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <label>图片</label>
+                <input type="file" id="snackImageFile" accept="image/*" onchange="previewImage(this)" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <input type="hidden" id="snackImage" value="">
+                <div id="imagePreview" style="margin-top: 10px; text-align: center;"></div>
             </div>
             <div style="margin-top: 20px; text-align: right;">
                 <button onclick="hideModal()" class="btn btn-danger">取消</button>
@@ -195,6 +197,7 @@
             document.getElementById('snackStock').value = '';
             document.getElementById('snackDescription').value = '';
             document.getElementById('snackImage').value = '';
+            document.getElementById('imagePreview').innerHTML = '';
             document.getElementById('snackModal').style.display = 'block';
         }
 
@@ -211,6 +214,14 @@
                 document.getElementById('snackStock').value = snack.stock || '';
                 document.getElementById('snackDescription').value = snack.description || '';
                 document.getElementById('snackImage').value = snack.image || '';
+                
+                const preview = document.getElementById('imagePreview');
+                if (snack.image) {
+                    preview.innerHTML = `<img src="${snack.image}" style="max-width: 200px; max-height: 200px; border-radius: 4px;">`;
+                } else {
+                    preview.innerHTML = '';
+                }
+                
                 document.getElementById('snackModal').style.display = 'block';
             } catch (error) {
                 console.error('加载商品信息失败:', error);
@@ -220,6 +231,8 @@
 
         function hideModal() {
             document.getElementById('snackModal').style.display = 'none';
+            document.getElementById('imagePreview').innerHTML = '';
+            document.getElementById('snackImageFile').value = '';
         }
 
         async function saveSnack() {
@@ -275,6 +288,43 @@
             } catch (error) {
                 console.error('删除失败:', error);
                 alert('删除失败，请稍后重试');
+            }
+        }
+
+        function previewImage(input) {
+            const preview = document.getElementById('imagePreview');
+            const hiddenInput = document.getElementById('snackImage');
+            
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    preview.innerHTML = `<img src="${e.target.result}" style="max-width: 200px; max-height: 200px; border-radius: 4px;">`;
+                };
+                
+                reader.readAsDataURL(file);
+                
+                api.admin.snack.upload(file)
+                    .then(data => {
+                        if (data.success) {
+                            hiddenInput.value = data.imageUrl;
+                            alert('图片上传成功');
+                        } else {
+                            alert('图片上传失败: ' + data.message);
+                            preview.innerHTML = '';
+                            input.value = '';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('上传失败:', error);
+                        alert('图片上传失败');
+                        preview.innerHTML = '';
+                        input.value = '';
+                    });
+            } else {
+                preview.innerHTML = '';
+                hiddenInput.value = '';
             }
         }
 

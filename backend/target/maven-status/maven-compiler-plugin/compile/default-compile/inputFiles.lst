@@ -21,6 +21,7 @@ F:\three\web\snack_shoop\backend\src\main\java\com\snack\service\BannerService.j
 F:\three\web\snack_shoop\backend\src\main\java\com\snack\service\CartService.java
 F:\three\web\snack_shoop\backend\src\main\java\com\snack\entity\Category.java
 F:\three\web\snack_shoop\backend\src\main\java\com\snack\controller\AdminOrderController.java
+F:\three\web\snack_shoop\backend\src\main\java\com\snack\config\WebConfig.java
 F:\three\web\snack_shoop\backend\src\main\java\com\snack\entity\Snack.java
 F:\three\web\snack_shoop\backend\src\main\java\com\snack\service\impl\BannerServiceImpl.java
 F:\three\web\snack_shoop\backend\src\main\java\com\snack\mapper\OrderMapper.java
