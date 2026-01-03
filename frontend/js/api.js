@@ -118,6 +118,10 @@ const api = {
             exchange: (data) => request('/user/order/exchange', {
                 method: 'POST',
                 body: JSON.stringify(data)
+            }),
+            cancel: (data) => request('/user/order/cancel', {
+                method: 'POST',
+                body: JSON.stringify(data)
             })
         }
     },

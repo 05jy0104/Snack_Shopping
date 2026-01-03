@@ -77,6 +77,17 @@ public class OrderController {
         return result;
     }
 
+    @PostMapping("/cancel")
+    public Map<String, Object> cancelOrder(@RequestBody Map<String, String> params) {
+        Map<String, Object> result = new HashMap<>();
+        Integer orderId = Integer.parseInt(params.get("orderId"));
+
+        orderService.updateStatus(orderId, "已取消");
+        result.put("success", true);
+        result.put("message", "订单已取消");
+        return result;
+    }
+
     @PostMapping("/create")
     public Map<String, Object> create(@RequestBody Map<String, String> params, HttpSession session) {
         Map<String, Object> result = new HashMap<>();

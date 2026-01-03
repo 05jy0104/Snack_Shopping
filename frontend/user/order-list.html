@@ -138,6 +138,11 @@
             color: white;
         }
 
+        .btn-cancel {
+            background-color: #f44336;
+            color: white;
+        }
+
         .btn:hover {
             opacity: 0.8;
         }
@@ -235,6 +240,19 @@
             }
         }
 
+        async function cancelOrder(orderId) {
+            if (confirm('确定要取消这个订单吗？')) {
+                try {
+                    await api.user.order.cancel({ orderId });
+                    alert('订单已取消');
+                    loadOrders();
+                } catch (error) {
+                    console.error('取消订单失败:', error);
+                    alert('取消订单失败，请稍后重试');
+                }
+            }
+        }
+
         async function loadOrders() {
             try {
                 const response = await api.user.order.list();
@@ -266,6 +284,9 @@
                         </div>
                         <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
                             <button class="btn btn-detail" onclick="showOrderDetail(${order.id})">查看详情</button>
+                            ${(order.status === '待发货' || order.status === '已发货') ? `
+                                <button class="btn btn-cancel" onclick="cancelOrder(${order.id})">取消订单</button>
+                            ` : ''}
                             ${order.status === '已完成' ? `
                                 <button class="btn btn-return" onclick="returnOrder(${order.id})">退货</button>
                                 <button class="btn btn-exchange" onclick="exchangeOrder(${order.id})">换货</button>
@@ -329,6 +350,7 @@
         window.showOrderDetail = showOrderDetail;
         window.returnOrder = returnOrder;
         window.exchangeOrder = exchangeOrder;
+        window.cancelOrder = cancelOrder;
     </script>
 </body>
 </html>

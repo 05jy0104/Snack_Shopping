@@ -7,6 +7,7 @@ public class Order {
     private Integer id;
     private Integer userId;
     private String username;
+    private String realName;
     private String orderNo;
     private Double totalAmount;
     private String status;
@@ -37,6 +38,14 @@ public class Order {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getRealName() {
+        return realName;
+    }
+
+    public void setRealName(String realName) {
+        this.realName = realName;
     }
 
     public String getOrderNo() {

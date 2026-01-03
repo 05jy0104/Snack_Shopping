@@ -4,11 +4,13 @@ import com.snack.entity.Cart;
 import com.snack.entity.Order;
 import com.snack.entity.OrderItem;
 import com.snack.entity.Snack;
+import com.snack.entity.User;
 import com.snack.mapper.CartMapper;
 import com.snack.mapper.OrderItemMapper;
 import com.snack.mapper.OrderMapper;
 import com.snack.mapper.SnackMapper;
 import com.snack.service.OrderService;
+import com.snack.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +34,9 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private SnackMapper snackMapper;
 
+    @Autowired
+    private UserService userService;
+
     @Override
     @Transactional
     public Order createOrder(Integer userId, String address, String phone) {
@@ -45,8 +50,12 @@ public class OrderServiceImpl implements OrderService {
             totalAmount += cart.getPrice() * cart.getQuantity();
         }
 
+        User user = userService.findById(userId);
+        String username = user != null ? user.getUsername() : "";
+
         Order order = new Order();
         order.setUserId(userId);
+        order.setUsername(username);
         order.setOrderNo(generateOrderNo());
         order.setTotalAmount(totalAmount);
         order.setStatus("待发货");
