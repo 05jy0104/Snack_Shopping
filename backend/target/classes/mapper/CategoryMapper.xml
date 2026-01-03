@@ -6,10 +6,15 @@
         <result column="name" property="name"/>
         <result column="description" property="description"/>
         <result column="create_time" property="createTime"/>
+        <result column="product_count" property="productCount"/>
     </resultMap>
 
     <select id="findAll" resultMap="BaseResultMap">
-        SELECT * FROM category ORDER BY create_time DESC
+        SELECT c.*, COUNT(s.id) as product_count
+        FROM category c
+        LEFT JOIN snack s ON c.id = s.category_id
+        GROUP BY c.id
+        ORDER BY c.create_time DESC
     </select>
 
     <select id="findById" resultMap="BaseResultMap">

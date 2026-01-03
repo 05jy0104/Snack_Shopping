@@ -7,6 +7,7 @@ public class Category {
     private String name;
     private String description;
     private Date createTime;
+    private Integer productCount;
 
     public Integer getId() {
         return id;
@@ -38,5 +39,13 @@ public class Category {
 
     public void setCreateTime(Date createTime) {
         this.createTime = createTime;
+    }
+
+    public Integer getProductCount() {
+        return productCount;
+    }
+
+    public void setProductCount(Integer productCount) {
+        this.productCount = productCount;
     }
 }

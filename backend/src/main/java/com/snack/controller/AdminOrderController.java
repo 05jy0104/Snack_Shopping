@@ -18,13 +18,8 @@ public class AdminOrderController {
     private OrderService orderService;
 
     @GetMapping("/list")
-    public Map<String, Object> list(HttpSession session) {
+    public Map<String, Object> list() {
         Map<String, Object> result = new HashMap<>();
-        if (session.getAttribute("admin") == null) {
-            result.put("success", false);
-            result.put("message", "未登录");
-            return result;
-        }
         List<Order> orders = orderService.findAll();
         result.put("success", true);
         result.put("orders", orders);

@@ -22,23 +22,17 @@
         <div class="content">
             <h2>商品管理</h2>
             
-            <div style="margin-bottom: 20px;">
+            <div style="margin-bottom: 20px; display: flex; gap: 15px; align-items: center;">
                 <button onclick="showAddModal()" class="btn btn-primary">添加商品</button>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label style="font-weight: bold;">分类筛选:</label>
+                    <select id="categoryFilter" onchange="filterByCategory()" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px; min-width: 150px;">
+                        <option value="">全部商品</option>
+                    </select>
+                </div>
             </div>
             
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>商品名称</th>
-                        <th>分类</th>
-                        <th>价格</th>
-                        <th>库存</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="snackList"></tbody>
-            </table>
+            <div id="snackList" class="snack-grid"></div>
         </div>
     </div>
 
@@ -94,19 +88,29 @@
 
         let currentSnackId = null;
         let categories = [];
+        let allSnacks = [];
 
         async function loadCategories() {
             try {
                 const response = await api.admin.category.list();
                 categories = response.categories || [];
+                
                 const select = document.getElementById('snackCategoryId');
+                const filterSelect = document.getElementById('categoryFilter');
                 
                 select.innerHTML = '<option value="">请选择分类</option>';
+                filterSelect.innerHTML = '<option value="">全部商品</option>';
+                
                 categories.forEach(category => {
                     const option = document.createElement('option');
                     option.value = category.id;
                     option.textContent = category.name;
                     select.appendChild(option);
+                    
+                    const filterOption = document.createElement('option');
+                    filterOption.value = category.id;
+                    filterOption.textContent = category.name;
+                    filterSelect.appendChild(filterOption);
                 });
             } catch (error) {
                 console.error('加载分类失败:', error);
@@ -116,34 +120,70 @@
         async function loadSnacks() {
             try {
                 const response = await api.admin.snack.list();
-                const snacks = response.snacks || [];
-                const tbody = document.getElementById('snackList');
+                allSnacks = response.snacks || [];
                 
-                if (snacks.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">暂无商品</td></tr>';
-                    return;
+                const categoryId = getCategoryIdFromUrl();
+                if (categoryId) {
+                    document.getElementById('categoryFilter').value = categoryId;
+                    const filteredSnacks = allSnacks.filter(snack => snack.categoryId === parseInt(categoryId));
+                    displaySnacks(filteredSnacks);
+                } else {
+                    displaySnacks(allSnacks);
                 }
-                
-                tbody.innerHTML = snacks.map(snack => {
-                    const category = categories.find(c => c.id === snack.categoryId);
-                    return `
-                        <tr>
-                            <td>${snack.id}</td>
-                            <td>${snack.name}</td>
-                            <td>${category ? category.name : '-'}</td>
-                            <td>¥${snack.price.toFixed(2)}</td>
-                            <td>${snack.stock}</td>
-                            <td>
-                                <button onclick="editSnack(${snack.id})" class="btn btn-primary">编辑</button>
-                                <button onclick="deleteSnack(${snack.id})" class="btn btn-danger">删除</button>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
             } catch (error) {
                 console.error('加载商品失败:', error);
-                document.getElementById('snackList').innerHTML = '<tr><td colspan="6" style="text-align: center;">加载失败，请稍后重试</td></tr>';
+                document.getElementById('snackList').innerHTML = '<div style="text-align: center; color: #999; padding: 40px;">加载失败，请稍后重试</div>';
             }
+        }
+
+        function displaySnacks(snacks) {
+            const container = document.getElementById('snackList');
+            
+            if (snacks.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #999; padding: 40px;">暂无商品</div>';
+                return;
+            }
+            
+            container.innerHTML = snacks.map(snack => {
+                const category = categories.find(c => c.id === snack.categoryId);
+                const imageUrl = snack.image || 'https://via.placeholder.com/200x200?text=No+Image';
+                return `
+                    <div class="snack-card">
+                        <div class="snack-image">
+                            <img src="${imageUrl}" alt="${snack.name}" onerror="this.src='https://via.placeholder.com/200x200?text=No+Image'">
+                        </div>
+                        <div class="snack-info">
+                            <h3 class="snack-name">${snack.name}</h3>
+                            <p class="snack-category">${category ? category.name : '未分类'}</p>
+                            <div class="snack-details">
+                                <span class="snack-price">¥${snack.price.toFixed(2)}</span>
+                                <span class="snack-stock">库存: ${snack.stock}</span>
+                            </div>
+                            ${snack.description ? `<p class="snack-description">${snack.description}</p>` : ''}
+                            <div class="snack-actions">
+                                <button onclick="editSnack(${snack.id})" class="btn btn-primary">编辑</button>
+                                <button onclick="deleteSnack(${snack.id})" class="btn btn-danger">删除</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterByCategory() {
+            const categoryId = document.getElementById('categoryFilter').value;
+            
+            if (!categoryId) {
+                displaySnacks(allSnacks);
+            } else {
+                const filteredSnacks = allSnacks.filter(snack => snack.categoryId === parseInt(categoryId));
+                displaySnacks(filteredSnacks);
+            }
+        }
+
+        function getCategoryIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('categoryId');
         }
 
         function showAddModal() {
